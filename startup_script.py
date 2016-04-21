@@ -10,8 +10,8 @@ def get_ip_address():
 
 def send_ip(name, ip_address):
 	headers = {'IP': str(ip_address), 'NAME': str(name)}
-    req = urllib2.Request(API_URL, headers=headers)
-    return json.load(urllib2.urlopen(req))
+	req = urllib2.Request(API_URL, headers=headers)
+	return json.load(urllib2.urlopen(req))
 
 def main():
 	fail = True
@@ -19,8 +19,9 @@ def main():
 	while(fail):
 		try:
 			ip_address = get_ip_address()
+			fail = False
 		except:
-			pass
+			fail = True
 
 	if ip_address is '' or ip_address is None:
 		raise Exception('Failed to acquire IP Address')
