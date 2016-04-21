@@ -4,7 +4,7 @@ import os
 import socket
 import urllib2
 import json
-import logging, loggin.handlers
+import logging, logging.handlers
 
 API_URL = 'http://54.173.46.77/add'
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
