@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 
-import socket
+import socket, urllib2
+
+API_URL = 'http://54.173.46.77/add'
+NAME_FILE = '/home/pi/car_name.txt'
 
 def get_ip_address():
     print socket.gethostbyname(socket.gethostname())
+
+def send_ip(name, ip_address):
+	headers = {'IP': str(ip_address), 'NAME': str(name)}
+    req = urllib2.Request(API_URL, headers=headers)
+    return json.load(urllib2.urlopen(req))
 
 def main():
 	fail = True
@@ -17,6 +25,14 @@ def main():
 	if ip_address is '' or ip_address is None:
 		raise Exception('Failed to acquire IP Address')
 
+	f = open(NAME_FILE, 'r')
+	car_name = f.read().strip()
+	f.close()
+
+	response = send_ip(car_name, ip_address)
+
+	if response.get('result') != 'success':
+		raise Exception('Failed to send IP to server')
 
 if __name__ == '__main__':
 	main()
