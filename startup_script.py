@@ -35,9 +35,9 @@ def main():
 		try:
 			ip_address = get_ip_address()
 			fail = False
-		except:
+		except Exception as e:
 			fail = True
-			logger.info('Failed to acquire and ip... trying again in 1 second')
+			logger.info('Failed to acquire and ip... trying again in 1 second. Message: {}'.format(e.message))
 			time.sleep(1)
 
 	if ip_address is '' or ip_address is None:
