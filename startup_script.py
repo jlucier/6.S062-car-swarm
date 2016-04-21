@@ -54,5 +54,7 @@ def main():
 	if response.get('result') != 'success':
 		logger.info('Failed to send IP to server')
 
+	logger.info('Success ... terminating')
+
 if __name__ == '__main__':
 	main()
