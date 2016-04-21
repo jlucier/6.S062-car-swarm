@@ -19,23 +19,19 @@ int main() {
   for(int i=0; i != 3; ++i) { // repeat to check disconnecting doesn't wreck next connect
     // Connect to a server
     std::cout << "Connecting to " << HostName << " ..." << std::flush;
-    while( !client.IsConnected().Connected )
-    {
+    while( !client.IsConnected().Connected ) {
       // Direct connection
 
       bool ok = false;
-      if(ConnectToMultiCast)
-      {
+      if(ConnectToMultiCast) {
         // Multicast connection
         ok = ( client.ConnectToMulticast( HostName, MulticastAddress ).Result == Result::Success );
 
       }
-      else
-      {
+      else {
         ok =( client.Connect( HostName ).Result == Result::Success );
       }
-      if(!ok)
-      {
+      if(!ok) {
         std::cout << "Warning - connect failed..." << std::endl;
       }
 
@@ -51,9 +47,12 @@ int main() {
                            Direction::Left, 
                            Direction::Up ); // Z-up
   while(true) {
-    while( client.GetFrame().Result != Result::Success ) {
+    while(client.GetFrame().Result != Result::Success) {
       sleep(1);
     }
+    // timing information
+    Output_GetFrameNumber _Output_GetFrameNumber = MyClient.GetFrameNumber();
+    Output_GetTimecode _Output_GetTimecode = MyClient.GetTimecode(); // has .Hours, .Minutes, .Seconds, .Frames
 
     // Count the number of subjects
     unsigned int subjectCount = client.GetSubjectCount().subjectCount;
@@ -78,7 +77,7 @@ int main() {
         float x = _Output_GetMarkerGlobalTranslation.Translation[0];
         float y = _Output_GetMarkerGlobalTranslation.Translation[1];
 
-        // TODO store x, y
+        // TODO store x, y, t
       }
 
       // TODO compute orientation of car and bounding box
