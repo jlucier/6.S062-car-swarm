@@ -4,9 +4,20 @@ import os
 import socket
 import urllib2
 import json
+import logging, loggin.handlers
 
 API_URL = 'http://54.173.46.77/add'
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
+
+lpath = '/var/log/pi/'
+logger = logging.getLogger('car_startup_script')
+logger.setLevel(logging.DEBUG)
+fh = logging.handlers.RotatingFileHandler('{}car_startup_script.log'.format(lpath))
+
+fh.setLevel(logging.DEBUG)
+frmt = logging.Formatter('%(asctime)s-%(levelname)s:%(message)s')
+fh.setFormatter(frmt)
+logger.addHandler(fh)
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
