@@ -15,7 +15,7 @@ def main():
 			pass
 
 	if ip_address is '' or ip_address is None:
-		
+		raise Exception('Failed to acquire IP Address')
 
 
 if __name__ == '__main__':
