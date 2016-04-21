@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import os
-import socket
-import urllib2
-import json
+import os, socket, time
+import urllib2, json
 import logging, logging.handlers
 
 API_URL = 'http://54.173.46.77/add'
@@ -39,7 +37,8 @@ def main():
 			fail = False
 		except:
 			fail = True
-			logger.info('Failed to acquire and ip... trying again')
+			logger.info('Failed to acquire and ip... trying again in 1 second')
+			time.sleep(1)
 
 	if ip_address is '' or ip_address is None:
 		logger.info('No IP address found... terminating')
