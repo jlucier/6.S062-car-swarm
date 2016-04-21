@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-import socket, urllib2
+import os
+import socket
+import urllib2
+import json
 
 API_URL = 'http://54.173.46.77/add'
-NAME_FILE = '/home/pi/car_name.txt'
+NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 
 def get_ip_address():
     return socket.gethostbyname(socket.gethostname())
