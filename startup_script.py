@@ -9,7 +9,9 @@ API_URL = 'http://54.173.46.77/add'
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 
 def get_ip_address():
-    return socket.gethostbyname(socket.gethostname())
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]
 
 def send_ip(name, ip_address):
 	headers = {'IP': str(ip_address), 'NAME': str(name)}
