@@ -30,6 +30,7 @@ def send_ip(name, ip_address):
 	return json.load(urllib2.urlopen(req))
 
 def main():
+	logger.info('Starting script')
 	fail = True
 	ip_address = ''
 	while(fail):
@@ -38,9 +39,11 @@ def main():
 			fail = False
 		except:
 			fail = True
+			logger.info('Failed to acquire and ip... trying again')
 
 	if ip_address is '' or ip_address is None:
-		raise Exception('Failed to acquire IP Address')
+		logger.info('No IP address found... terminating')
+		return
 
 	f = open(NAME_FILE, 'r')
 	car_name = f.read().strip()
@@ -49,7 +52,7 @@ def main():
 	response = send_ip(car_name, ip_address)
 
 	if response.get('result') != 'success':
-		raise Exception('Failed to send IP to server')
+		logger.info('Failed to send IP to server')
 
 if __name__ == '__main__':
 	main()
