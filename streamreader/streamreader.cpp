@@ -61,7 +61,7 @@ dict streamreader_get_frame() {
     sleep(1);
   }
   // timing information
-  Output_GetFrameNumber frame_number = client_ptr->GetFrameNumber();
+  unsigned int frame_number = client_ptr->GetFrameNumber().FrameNumber;
   // Output_GetTimecode frame_time = client_ptr->GetTimecode(); // has .Hours, .Minutes, .Seconds, .Frames
 
   // Count the number of subjects
