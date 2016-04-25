@@ -34,7 +34,10 @@ class ViconServer(ThreadingMixIn, TCPServer):
 			new_frame = dict()
 			if len(self.frames) != 0:
 				for car, values in curr_frame.iteritems():
-					v = math.sqrt(abs(values[0] - self.frames[-1][0])**2 + abs(values[1] - self.frames[-1][1])**2)
+					v = 0
+					if car in self.frames[-1]:
+						v = math.sqrt(abs(values[0] - self.frames[-1][car][0])**2
+							+ abs(values[1] - self.frames[-1][car][1])**2)
 					new_frame[car] = (values[0], values[1], values[2], v, values[3])
 			else:
 				for car, values in curr_frame.iteritems():
