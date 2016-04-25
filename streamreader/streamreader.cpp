@@ -1,22 +1,29 @@
-#include <iostream>
-#include <cassert>
-#include <ctime>
-#include <vector>
-#include <string.h>
+#include <string>
+#include <map>
+#include <math.h>
 #include <unistd.h> // For sleep()
-#include <time.h>
+
+#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/dict.hpp>
+#include <boost/python/tuple.hpp>
+#include "boost/tuple/tuple.hpp"
 
 #include "Client.h"
 
+#define FRONT "front"
+#define BACK "back"
+
 using namespace std;
 using namespace ViconDataStreamSDK::CPP;
+using namespace boost::python;
 
 static Client *client_ptr;
 
-void streamreader_connect(const char* host) {
+bool streamreader_connect(const char* host) {
 
   // Make a new client
-  client_ptr = new ViconDataStreamSDK::CPP::Client();
+  client_ptr = new Client();
 
   for(int i=0; i != 3; ++i) { // repeat to check disconnecting doesn't wreck next connect
     // Connect to a server
@@ -32,58 +39,60 @@ void streamreader_connect(const char* host) {
     }
   }
 
-  client_ptr->SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
+  if (client_ptr->IsConnected().Connected) {
+    return false;
+  }
+
+  client_ptr->SetStreamMode(StreamMode::ServerPush);
 
   // Set the global up axis
-  client_ptr->SetAxisMapping(ViconDataStreamSDK::CPP::Direction::Forward, 
-                           ViconDataStreamSDK::CPP::Direction::Left, 
-                           ViconDataStreamSDK::CPP::Direction::Up);
+  client_ptr->SetAxisMapping(Direction::Forward, 
+                           Direction::Left, 
+                           Direction::Up);
+  return true;
 }
 
-std::string streamreader_get_frame() {
+dict streamreader_get_frame() {
+  // "car_name" => (x,y,theta,t)
+  // t = frame_number
+  dict cars;
+
   while(client_ptr->GetFrame().Result != Result::Success) {
     sleep(1);
   }
   // timing information
   Output_GetFrameNumber frame_number = client_ptr->GetFrameNumber();
-  Output_GetTimecode frame_time = client_ptr->GetTimecode(); // has .Hours, .Minutes, .Seconds, .Frames
+  // Output_GetTimecode frame_time = client_ptr->GetTimecode(); // has .Hours, .Minutes, .Seconds, .Frames
 
-  std::string name;
   // Count the number of subjects
-  unsigned int subjectCount = client_ptr->GetSubjectCount().SubjectCount;
-  for(unsigned int subjectIndex = 0; subjectIndex < subjectCount; ++subjectIndex) {
+  unsigned int car_count = client_ptr->GetSubjectCount().SubjectCount;
+  for(unsigned int car_index = 0; car_index < car_count; ++car_index) {
     // TODO get the name and determine bluetooth address
-    std::string subject_name = client_ptr->GetSubjectName(subjectIndex).SubjectName;
-    name = subject_name;
+    string car_name = client_ptr->GetSubjectName(car_index).SubjectName;
 
     // Count the number of markers
-    unsigned int markerCount = client_ptr->GetMarkerCount(subject_name).MarkerCount;
-    for(unsigned int markerIndex = 0; markerIndex < markerCount; ++markerIndex) {
+    unsigned int marker_count = client_ptr->GetMarkerCount(car_name).MarkerCount;
+    map<string, boost::tuples::tuple<float, float> > car_markers;
+    for(unsigned int marker_index = 0; marker_index < marker_count; ++marker_index) {
       // Get the marker name
-      std::string marker_name = client_ptr->GetMarkerName(subject_name, markerIndex).MarkerName;
-
-      // Get the marker parent
-      std::string marker_parent_name = client_ptr->GetMarkerParentName(subject_name, marker_name).SegmentName;
+      string marker_name = client_ptr->GetMarkerName(car_name, marker_index).MarkerName;
 
       // Get the global marker translation
-      Output_GetMarkerGlobalTranslation location = client_ptr->GetMarkerGlobalTranslation(subject_name, marker_name);
+      Output_GetMarkerGlobalTranslation location = client_ptr->GetMarkerGlobalTranslation(car_name, marker_name);
 
-      float x = location.Translation[0];
-      float y = location.Translation[1];
-
-      // TODO store x, y, t
+      car_markers[marker_name] = boost::make_tuple(location.Translation[0], location.Translation[1]);
     }
 
-    // TODO compute orientation of car and bounding box
+    boost::tuples::tuple<float,float> front = car_markers[FRONT];
+    boost::tuples::tuple<float,float> back = car_markers[BACK];
+    float v_x = boost::get<0>(front) - boost::get<0>(back);
+    float v_y = boost::get<1>(front) - boost::get<1>(back);
+    float theta = atan(v_y/v_x);
+    cars[car_name] = make_tuple(boost::get<0>(back),boost::get<1>(back), theta, frame_number);
   }
 
-  // TODO return proper values
-  return name;
+  return cars;
 }
-
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-using namespace boost::python;
 
 BOOST_PYTHON_MODULE(streamreader)
 {
