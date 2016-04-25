@@ -44,8 +44,7 @@ bool streamreader_connect(const char* host) {
   }
 
   client_ptr->SetStreamMode(StreamMode::ServerPush);
-
-  // Set the global up axis
+  client_ptr->EnableMarkerData();
   client_ptr->SetAxisMapping(Direction::Forward, 
                            Direction::Left, 
                            Direction::Up);
@@ -67,7 +66,6 @@ dict streamreader_get_frame() {
   // Count the number of subjects
   unsigned int car_count = client_ptr->GetSubjectCount().SubjectCount;
   for(unsigned int car_index = 0; car_index < car_count; ++car_index) {
-    // TODO get the name and determine bluetooth address
     string car_name = client_ptr->GetSubjectName(car_index).SubjectName;
 
     // Count the number of markers
@@ -88,7 +86,7 @@ dict streamreader_get_frame() {
     float v_x = boost::get<0>(front) - boost::get<0>(back);
     float v_y = boost::get<1>(front) - boost::get<1>(back);
     float theta = atan(v_y/v_x);
-    cars[car_name] = make_tuple(boost::get<0>(back),boost::get<1>(back), theta, frame_number);
+    cars[car_name] = make_tuple(boost::get<0>(back), boost::get<1>(back), theta, frame_number);
   }
 
   return cars;
