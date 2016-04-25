@@ -39,7 +39,7 @@ bool streamreader_connect(const char* host) {
     }
   }
 
-  if (client_ptr->IsConnected().Connected) {
+  if (!client_ptr->IsConnected().Connected) {
     return false;
   }
 
