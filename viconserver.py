@@ -28,7 +28,7 @@ class ViconServer(ThreadingMixIn, TCPServer):
 		if not streamreader.connect(VICON_HOST):
 			raise Exception("Couldn't connect to vicon system at : {}:{}".format(VICON_HOST, VICON_PORT))
 
-	def read_vicon_stream():
+	def read_vicon_stream(self):
 		while not self.stop_vicon:
 			curr_frame = streamreader.get_frame()
 			new_frame = dict()
