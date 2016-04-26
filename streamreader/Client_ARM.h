@@ -35,6 +35,7 @@
 #endif
 
 #include <string>
+#include <vector>
 
 namespace ViconDataStreamSDK
 {
@@ -265,152 +266,57 @@ namespace Result
     unsigned int Point;
   };
 
-  /// The result of Client::Connect.
-  class Output_Connect
+  class Output_SimpleResult
   {
   public:
-    /// The status of the connect operation.
     Result::Enum Result;
   };
 
-  /// The result of Client::ConnectToMulticast.
-  class Output_ConnectToMulticast
+  // Output objects that only return a result enum
+  class Output_Connect                    : public Output_SimpleResult {};
+  class Output_ConnectToMulticast         : public Output_SimpleResult {};
+  class Output_Disconnect                 : public Output_SimpleResult {};
+  class Output_StartTransmittingMulticast : public Output_SimpleResult {};
+  class Output_StopTransmittingMulticast  : public Output_SimpleResult {};
+  class Output_EnableSegmentData          : public Output_SimpleResult {};
+  class Output_EnableMarkerData           : public Output_SimpleResult {};
+  class Output_EnableUnlabeledMarkerData  : public Output_SimpleResult {};
+  class Output_EnableDeviceData           : public Output_SimpleResult {};
+  class Output_EnableCentroidData         : public Output_SimpleResult {};
+  class Output_EnableGreyscaleData        : public Output_SimpleResult {};
+  class Output_EnableDebugData            : public Output_SimpleResult {};
+  class Output_DisableSegmentData         : public Output_SimpleResult {};
+  class Output_DisableMarkerData          : public Output_SimpleResult {};
+  class Output_DisableUnlabeledMarkerData : public Output_SimpleResult {};
+  class Output_DisableDeviceData          : public Output_SimpleResult {};
+  class Output_DisableCentroidData        : public Output_SimpleResult {};
+  class Output_DisableGreyscaleData       : public Output_SimpleResult {};
+  class Output_DisableDebugData           : public Output_SimpleResult {};
+  class Output_SetStreamMode              : public Output_SimpleResult {};
+  class Output_SetApexDeviceFeedback      : public Output_SimpleResult {};
+  class Output_SetAxisMapping             : public Output_SimpleResult {};
+  class Output_GetFrame                   : public Output_SimpleResult {};
+  class Output_SetCameraFilter            : public Output_SimpleResult {};
+
+  class Output_EnabledFlag
   {
   public:
-    /// The status of the connect operation.
-    Result::Enum Result;
+    bool Enabled;
   };
 
-  class Output_Disconnect
-  {
-  public:
-    Result::Enum Result;
-  };
+  // Output objects that only return an enabled flag
+  class Output_IsSegmentDataEnabled         : public Output_EnabledFlag {};
+  class Output_IsMarkerDataEnabled          : public Output_EnabledFlag {};
+  class Output_IsUnlabeledMarkerDataEnabled : public Output_EnabledFlag {};
+  class Output_IsDeviceDataEnabled          : public Output_EnabledFlag {};
+  class Output_IsCentroidDataEnabled        : public Output_EnabledFlag {};
+  class Output_IsGreyscaleDataEnabled       : public Output_EnabledFlag {};
+  class Output_IsDebugDataEnabled           : public Output_EnabledFlag {};
 
   class Output_IsConnected
   {
   public:
     bool Connected;
-  };
-
-  class Output_StartTransmittingMulticast
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_StopTransmittingMulticast
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_EnableSegmentData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_EnableMarkerData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_EnableUnlabeledMarkerData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_EnableDeviceData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_EnableCentroidData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_DisableSegmentData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_DisableMarkerData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_DisableUnlabeledMarkerData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_DisableDeviceData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_DisableCentroidData
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_IsSegmentDataEnabled
-  {
-  public:
-    bool Enabled;
-  };
-
-  class Output_IsMarkerDataEnabled
-  {
-  public:
-    bool Enabled;
-  };
-
-  class Output_IsUnlabeledMarkerDataEnabled
-  {
-  public:
-    bool Enabled;
-  };
-
-  class Output_IsDeviceDataEnabled
-  {
-  public:
-    bool Enabled;
-  };
-
-  class Output_IsCentroidDataEnabled
-  {
-  public:
-    bool Enabled;
-  };
-
-  class Output_SetStreamMode
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_SetApexDeviceFeedback
-  {
-  public:
-    Result::Enum Result;
-  };
-
-  class Output_SetAxisMapping
-  {
-  public:
-    Result::Enum Result;
   };
 
   class Output_GetAxisMapping
@@ -419,12 +325,6 @@ namespace Result
     Direction::Enum XAxis;
     Direction::Enum YAxis;
     Direction::Enum ZAxis;
-  };
-
-  class Output_GetFrame
-  {
-  public:
-    Result::Enum Result;
   };
 
   class Output_GetFrameNumber
@@ -483,6 +383,14 @@ namespace Result
     Result::Enum Result;
     double       Total;
   };
+
+  class Output_GetHardwareFrameNumber
+  {
+  public:
+    Result::Enum Result;
+    unsigned int HardwareFrameNumber;
+  };
+
 
   class Output_GetSubjectCount
   {
@@ -816,6 +724,49 @@ namespace Result
     String           CameraName;
   };
 
+  class Output_GetCameraId
+  {
+  public:
+    Result::Enum Result;
+    unsigned int CameraId;
+  };
+
+  class Output_GetCameraUserId
+  {
+  public:
+    Result::Enum Result;
+    unsigned int CameraUserId;
+  };
+
+  class Output_GetCameraType
+  {
+  public:
+    Result::Enum     Result;
+    String           CameraType;
+  };
+
+  class Output_GetCameraDisplayName
+  {
+  public:
+    Result::Enum     Result;
+    String           CameraDisplayName;
+  };
+
+  class Output_GetCameraResolution
+  {
+  public:
+    Result::Enum Result;
+    unsigned int ResolutionX;
+    unsigned int ResolutionY;
+  };
+
+  class Output_GetIsVideoCamera
+  {
+  public:
+    Result::Enum Result;
+    bool IsVideoCamera;
+  };
+
   class Output_GetCentroidCount
   {
   public:
@@ -830,6 +781,22 @@ namespace Result
     double CentroidPosition[ 2 ];
     double Radius;
 //    double Accuracy;
+  };
+
+  class Output_GetGreyscaleBlobCount
+  {
+  public:
+    Result::Enum Result;
+    unsigned int BlobCount;
+  };
+
+  class Output_GetGreyscaleBlob
+  {
+  public:
+    Result::Enum Result;
+    std::vector< unsigned int > BlobLinePositionsX;
+    std::vector< unsigned int > BlobLinePositionsY;
+    std::vector< std::vector< unsigned char > > BlobLinePixelValues;
   };
 
   class ClientImpl;
@@ -1012,23 +979,35 @@ namespace Result
     ///         + ServerNotTransmittingMulticast
     Output_StopTransmittingMulticast StopTransmittingMulticast();
 
+    /// Set the number of frames that the client should buffer.
+    /// The default value is 1 which always supplies the latest frame.
+    /// Choose higher values to reduce the risk of missing frames between calls
+    /// to GetFrame()
+    void SetBufferSize( unsigned int i_BufferSize );
+
     Output_EnableSegmentData         EnableSegmentData();
     Output_EnableMarkerData          EnableMarkerData();
     Output_EnableUnlabeledMarkerData EnableUnlabeledMarkerData();
     Output_EnableDeviceData          EnableDeviceData();
     Output_EnableCentroidData        EnableCentroidData();
+    Output_EnableGreyscaleData       EnableGreyscaleData();
+    Output_EnableDebugData           EnableDebugData();
 
     Output_DisableSegmentData         DisableSegmentData();
     Output_DisableMarkerData          DisableMarkerData();
     Output_DisableUnlabeledMarkerData DisableUnlabeledMarkerData();
     Output_DisableDeviceData          DisableDeviceData();
     Output_DisableCentroidData        DisableCentroidData();
+    Output_DisableGreyscaleData       DisableGreyscaleData();
+    Output_DisableDebugData           DisableDebugData();
 
     Output_IsSegmentDataEnabled         IsSegmentDataEnabled() const;
     Output_IsMarkerDataEnabled          IsMarkerDataEnabled() const;
     Output_IsUnlabeledMarkerDataEnabled IsUnlabeledMarkerDataEnabled() const;
     Output_IsDeviceDataEnabled          IsDeviceDataEnabled() const;
-    Output_IsCentroidDataEnabled        IsCentroidDataEnabled() const;    
+    Output_IsCentroidDataEnabled        IsCentroidDataEnabled() const;
+    Output_IsGreyscaleDataEnabled       IsGreyscaleDataEnabled() const;
+    Output_IsDebugDataEnabled           IsDebugDataEnabled() const;
 
     Output_SetStreamMode SetStreamMode( const StreamMode::Enum Mode );
 
@@ -1044,10 +1023,12 @@ namespace Result
 
     Output_GetFrameRate GetFrameRate() const;
 
-    Output_GetLatencySampleCount GetLatencySampleCount() const;
-    Output_GetLatencySampleName  GetLatencySampleName( const unsigned int LatencySampleIndex ) const;
-    Output_GetLatencySampleValue GetLatencySampleValue( const String & LatencySampleName ) const;
-    Output_GetLatencyTotal       GetLatencyTotal() const;
+    Output_GetLatencySampleCount  GetLatencySampleCount() const;
+    Output_GetLatencySampleName   GetLatencySampleName( const unsigned int LatencySampleIndex ) const;
+    Output_GetLatencySampleValue  GetLatencySampleValue( const String & LatencySampleName ) const;
+    Output_GetLatencyTotal        GetLatencyTotal() const;
+    Output_GetHardwareFrameNumber GetHardwareFrameNumber() const;
+
 
     Output_GetSubjectCount GetSubjectCount() const;
     Output_GetSubjectName GetSubjectName( const unsigned int SubjectIndex ) const;
@@ -1190,8 +1171,19 @@ namespace Result
 
     Output_GetCameraCount GetCameraCount() const;
     Output_GetCameraName GetCameraName( unsigned int i_CameraIndex ) const;
+    Output_GetCameraId GetCameraId( const std::string & i_rCameraName ) const;
+    Output_GetCameraUserId GetCameraUserId( const std::string & i_rCameraName ) const;
+    Output_GetCameraType GetCameraType( const std::string & i_rCameraName ) const;
+    Output_GetCameraDisplayName GetCameraDisplayName(  const std::string & i_rCameraName ) const;
+    
+    Output_GetCameraResolution GetCameraResolution( const std::string & i_rCameraName ) const;
+    Output_GetIsVideoCamera GetIsVideoCamera( const std::string & i_rCameraName ) const;
     Output_GetCentroidCount GetCentroidCount( const std::string & i_rCameraName ) const;
     Output_GetCentroidPosition GetCentroidPosition( const std::string & i_rCameraName, const unsigned int i_CentroidIndex ) const;
+    Output_GetGreyscaleBlobCount GetGreyscaleBlobCount( const std::string & i_rCameraName ) const;
+    Output_GetGreyscaleBlob GetGreyscaleBlob( const std::string & i_rCameraName, const unsigned int i_BlobIndex ) const;
+
+    Output_SetCameraFilter SetCameraFilter( const std::vector< unsigned int > & i_rCameraIdsForCentroids, const std::vector< unsigned int > & i_rCameraIdsForBlobs );
 
   private:
     ClientImpl * m_pClientImpl;
