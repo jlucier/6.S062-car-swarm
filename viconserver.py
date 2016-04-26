@@ -12,7 +12,7 @@ from collections import deque
 # END TESTING
 
 import streamreader
-from utils import * # config and ip address functions
+import utils
 
 class ViconRequestHandler(BaseRequestHandler):
 
@@ -28,18 +28,18 @@ class ViconRequestHandler(BaseRequestHandler):
 class ViconServer(ThreadingMixIn, TCPServer):
 
 	def __init__(self):
-		TCPServer.__init__(self, (socket.gethostname(), SERVER_PORT), ViconRequestHandler)
+		TCPServer.__init__(self, (socket.gethostname(), utils.SERVER_PORT), ViconRequestHandler)
 
 		self._vicon_thread = threading.Thread(target=self._read_vicon_stream)
 		self._stop_vicon = False
 		self._frames = deque(maxlen=10)
 
 		# report ip to server
-		if not send_ip(SERVER_NAME, get_ip_address()):
+		if not utils.send_ip(utils.SERVER_NAME, utils.get_ip_address()):
 			raise Exception("Couldn't report IP address to API")
 
-		if not streamreader.connect(VICON_HOST):
-			raise Exception("Couldn't connect to vicon system at : {}:{}".format(VICON_HOST, VICON_PORT))
+		if not streamreader.connect(utils.VICON_HOST):
+			raise Exception("Couldn't connect to vicon system at : {}:{}".format(utils.VICON_HOST, utils.VICON_PORT))
 
 	def _read_vicon_stream(self):
 		if len(self._frames) == 0:

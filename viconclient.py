@@ -4,7 +4,7 @@ import threading
 import struct
 from collections import deque
 
-SERVER_PORT = 4001
+import utils
 
 class ViconClient(object):
 
@@ -18,23 +18,10 @@ class ViconClient(object):
 	def _receive_frames(self):
 		while not self._stop_stream:
 			self._socket.send("hello")
-			buf = self._recvall(4)
+			buf = utils.recvall(self._socket, 4)
 			length, = struct.unpack('!I', buf)
-			frame = json.loads(self._recvall(length))
+			frame = json.loads(utils.recvall(self._socket, length))
 			self._frames.append(frame)
-	
-	def _recvall(self, count):
-		buf = b''
-		while count:
-			try:
-				newbuf = self._socket.recv(count)
-			except:
-				return None
-			if not newbuf:
-				return None
-			buf += newbuf
-			count -= len(newbuf)
-		return buf
 
 	def get_frame(self):
 		if len(self._frames) > 0:
@@ -51,7 +38,7 @@ class ViconClient(object):
 
 def main():
 	# for testing
-	s = ViconClient('127.0.1.1', SERVER_PORT)
+	s = ViconClient('127.0.1.1', utils.SERVER_PORT)
 	s.start()
 	try:
 		while True:
