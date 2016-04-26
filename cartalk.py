@@ -20,7 +20,12 @@ class CarClient(object):
 
 	def _send(self):
 		while not self._kill:
-			item = self._queue.get()
+			item = None
+			try:
+				item = self._queue.get(timeout=2)
+			except Empty:
+				continue
+
 			s = self._cars[item[0]]
 			message = json.dumps(item[1])
 			s.sendall(struct.pack('!I', len(message)))
@@ -37,6 +42,7 @@ class CarClient(object):
 		self._thread.join()
 		for s in self._cars.values():
 			s.close()
+		return True
 
 class CarRequestHandler(BaseRequestHandler):
 
@@ -95,3 +101,12 @@ class CarTalker(object):
 
 	def get_message(self):
 		return self._server.get_message()
+
+	def start(self):
+		self._client.start()
+		self._server.start()
+
+	def stop(self):
+		self._client.stop()
+		self._server.stop()
+		return True

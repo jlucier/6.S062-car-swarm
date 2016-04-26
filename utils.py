@@ -15,6 +15,9 @@ CAR_PORT = 5001
 API_URL_ADD = 'http://54.173.46.77/add'
 API_URL_GET = 'http://54.173.46.77/get'
 
+# TODO determine distance under which to deem collision
+MIN_DISTANCE = None
+
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 
 def get_car_ips():

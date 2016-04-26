@@ -3,38 +3,51 @@ import time
 import math
 from collections import deque
 
-from utils import *
+import utils
 from viconclient import ViconClient
 
 class Car(object):
-    #POSITION AND TIME TRACKING QUEUES
-    xpos = deque(maxlen=2500)     #index -1 is most recent in time
-    ypos = deque(maxlen=2500)     #index -1 is most recent in time
-    theta = deque(maxlen=2500)    #index -1 is most recent in time
-    time = deque(maxlen=2500)     #index -1 is most recent in time
-    velocity = deque(maxlen=2500) #index -1 is most recent in time
-
-    send_time = 0
-    sent = False
-    otherCars = {}
-
     def __init__(self):
-        f = open(NAME_FILE, 'r')
+        f = open(utils.NAME_FILE, 'r')
         car_name = f.read().strip()
         f.close()
 
         self.name = car_name
-        self.car_ips = 
+        self.frames = deque(maxlen=5) # frame = {'car_name': (x,y,theta,v,t), ...}
+        self._kill = False
+        self._collision_worker = threading.Thread(target=self._detect_collisions)
+
+        car_ips = dict()
+        vicon_ip = None
+        ips = get_car_ips()
+
+        for name, ip in ips.iteritems():
+            if name == utils.SERVER_NAME:
+                vicon_ip = ip
+            elif name != self.car_name:
+                self._car_ips[name] = ip
+
+        self._vicon_client = ViconClient(vicon_ip, utils.SERVER_PORT, self.frames)
+        self._talker = CarTalker(car_ips)
     
-    def collision_detection(self, CarTwo): #should be ran 2-20Hz
-        distanceThreshold = 1
+    def _detect_collisions(self):
+        while not self._kill:
+            if len(self.frames) == 0:
+                continue
+            curr_frame = self.frames[-1]
+            my_vals = curr_frame[self.car_name]
 
-        distanceSquared = (self.xpos[0] - CarTwo.xpos[0])**2 
-                        + (self.ypos[0] - CarTwo.ypos[0])**2
-        if (math.sqrt(distanceSquared) < distanceThreshold):
-            collision_resolution(self, CarTwo)
+            for car_name, vals in curr_frame.iteritems():
+                if car_name == self.car_name:
+                    continue
 
-    def collision_resolution(self, CarTwo):
+                # look ahead to determine if they will collide (come within utils.MIN_DISTANCE)
+                # based on orientation and velocity, not just distance
+
+                if collide:
+                    resolve_collision(self, car_name)
+
+    def resolve_collision(self, other_car):
         self.resolved = False
         while(self.resolved == False):
             randomized_send(self, CarTwo)
@@ -47,18 +60,18 @@ class Car(object):
 
         self.send_time = time.clock()
         self.sent = True
-    
-    def send_message(msg):
-        #TODO IMPLEMENT
 
-    def drive(maxVelocity):
-        #TODO IMPLEMENT
-    
-    def integrate_frame(frame):
-        self.xpos.append(frame.x)
-        self.ypos.append(frame.y)
-        self.theta.append(frame.z)
-        self.time.append(frame.t)
+    def start(self):
+        self._vicon_client.start()
+        self._talker.start()
+        self._collision_worker.start()
+
+    def stop(self):
+        self._kill = False
+        self._vicon_client.stop()
+        self._talker.stop()
+        self._collision_worker.join()
+        return True
 
     def listen(self, message):
         #CAN ADD WHILE LOOP FOR ROBUSTNESS 

@@ -2,15 +2,14 @@ import socket
 import json
 import threading
 import struct
-from collections import deque
 
 import utils
 
 class ViconClient(object):
 
-	def __init__(self, host, port):
+	def __init__(self, host, port, destination):
 		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self._frames = deque(maxlen=3)
+		self._frames = destination # reference to add frames to
 		self._stop_stream = False
 		self._stream_thread = threading.Thread(target=self._receive_frames)
 		self._socket.connect((host, port))
@@ -36,19 +35,23 @@ class ViconClient(object):
 		self._stream_thread.join()
 		self._socket.close()
 
+# Testing
+
+from collections import deque
+
 def main():
-	# for testing
-	s = ViconClient('127.0.1.1', utils.SERVER_PORT)
-	s.start()
+	d = deque(maxlen=3)
+	c = ViconClient('127.0.1.1', utils.SERVER_PORT, d)
+	c.start()
 	try:
 		while True:
-			inp = raw_input('Get frame? ')
-			if inp == 'n':
+			inp = raw_input('Kill? ')
+			if inp == 'y':
 				break
-			print s.get_frame()
+			print d[-1]
 	except KeyboardInterrupt:
 		pass
-	s.close()
+	c.close()
 
 if __name__ == '__main__':
 	main()
