@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-import os, socket, time
-import urllib2, json
+import time
 import logging, logging.handlers
 
-API_URL = 'http://54.173.46.77/add'
-NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
+from utils import * # config and ip address functions
 
 lpath = '/var/log/pi/'
 logger = logging.getLogger('car_startup_script')
@@ -16,16 +14,6 @@ fh.setLevel(logging.DEBUG)
 frmt = logging.Formatter('%(asctime)s-%(levelname)s:%(message)s')
 fh.setFormatter(frmt)
 logger.addHandler(fh)
-
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    return s.getsockname()[0]
-
-def send_ip(name, ip_address):
-	headers = {'IP': str(ip_address), 'NAME': str(name)}
-	req = urllib2.Request(API_URL, headers=headers)
-	return json.load(urllib2.urlopen(req))
 
 def main():
 	logger.info('Starting script')
@@ -50,7 +38,7 @@ def main():
 
 	response = send_ip(car_name, ip_address)
 
-	if response.get('result') != 'success':
+	if not response:
 		logger.info('Failed to send IP to server')
 
 	logger.info('Success ... terminating')

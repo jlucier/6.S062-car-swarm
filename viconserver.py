@@ -1,6 +1,6 @@
 from SocketServer import *
 import socket, threading
-import json, urllib2
+import json
 import math
 import struct
 
@@ -12,23 +12,7 @@ from collections import deque
 # END TESTING
 
 import streamreader
-
-SERVER_PORT = 4001
-SERVER_NAME = "vicon_server"
-API_URL = 'http://54.173.46.77/add'
-
-VICON_PORT = 801
-VICON_HOST = '192.168.20.99'
-
-def _get_ip_address():
-	    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	    s.connect(("8.8.8.8", 80))
-	    return s.getsockname()[0]
-
-def _send_ip(name, ip_address):
-	headers = {'IP': str(ip_address), 'NAME': str(name)}
-	req = urllib2.Request(API_URL, headers=headers)
-	return json.load(urllib2.urlopen(req))
+from utils import * # config and ip address functions
 
 class ViconRequestHandler(BaseRequestHandler):
 
@@ -51,7 +35,7 @@ class ViconServer(ThreadingMixIn, TCPServer):
 		self._frames = deque(maxlen=10)
 
 		# report ip to server
-		if _send_ip(SERVER_NAME, _get_ip_address())['result'] != 'success':
+		if not send_ip(SERVER_NAME, get_ip_address()):
 			raise Exception("Couldn't report IP address to API")
 
 		if not streamreader.connect(VICON_HOST):

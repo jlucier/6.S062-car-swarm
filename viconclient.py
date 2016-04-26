@@ -50,14 +50,17 @@ class ViconClient(object):
 		self._socket.close()
 
 def main():
+	# for testing
 	s = ViconClient('127.0.1.1', SERVER_PORT)
 	s.start()
-	while True:
-		inp = raw_input('Get frame? ')
-		if inp == 'n':
-			break
-		print s.get_frame()
-
+	try:
+		while True:
+			inp = raw_input('Get frame? ')
+			if inp == 'n':
+				break
+			print s.get_frame()
+	except KeyboardInterrupt:
+		pass
 	s.close()
 
 if __name__ == '__main__':

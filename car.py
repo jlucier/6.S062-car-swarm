@@ -3,24 +3,28 @@ import time
 import math
 from collections import deque
 
+from utils import *
+from viconclient import ViconClient
+
 class Car(object):
-    
-    name = "car"
-    
     #POSITION AND TIME TRACKING QUEUES
-    xpos = deque(maxlen = 2500)     #index -1 is most recent in time
-    ypos = deque(maxlen = 2500)     #index -1 is most recent in time
-    theta = deque(maxlen = 2500)    #index -1 is most recent in time
-    time = deque(maxlen = 2500)     #index -1 is most recent in time
-    velocity = deque(maxlen = 2500) #index -1 is most recent in time
+    xpos = deque(maxlen=2500)     #index -1 is most recent in time
+    ypos = deque(maxlen=2500)     #index -1 is most recent in time
+    theta = deque(maxlen=2500)    #index -1 is most recent in time
+    time = deque(maxlen=2500)     #index -1 is most recent in time
+    velocity = deque(maxlen=2500) #index -1 is most recent in time
 
     send_time = 0
     sent = False
     otherCars = {}
-    maxVelocity = 1
-    # The class "constructor" - It's actually an initializer 
-    def __init__(self, name):
-        self.name = name
+
+    def __init__(self):
+        f = open(NAME_FILE, 'r')
+        car_name = f.read().strip()
+        f.close()
+
+        self.name = car_name
+        self.car_ips = 
     
     def collision_detection(self, CarTwo): #should be ran 2-20Hz
         distanceThreshold = 1
@@ -46,6 +50,7 @@ class Car(object):
     
     def send_message(msg):
         #TODO IMPLEMENT
+
     def drive(maxVelocity):
         #TODO IMPLEMENT
     
