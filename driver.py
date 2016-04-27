@@ -55,7 +55,7 @@ class Driver(object):
         self.path = (Direction.Back, self.path[1])
 
     def stop(self):
-        for pin in PINS:
+        for pin in Direction.Pins:
             GPIO.output(pin, False)
 
         self.path = (None, None)
