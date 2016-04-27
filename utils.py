@@ -22,6 +22,7 @@ FRAME_STEP = 1
 
 # Timeout for queue get in threads
 QUEUE_TIMEOUT = 2
+SOCKET_TIMEOUT = 0.5
 
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 

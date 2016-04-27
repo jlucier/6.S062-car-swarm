@@ -5,24 +5,29 @@ import math
 import struct
 from collections import deque
 
-import streamreader
+# import streamreader
 import utils
 
 # BEGIN TESTING
-# import streamreader_mock as streamreader
+import streamreader_mock as streamreader
 # import time
 # END TESTING
 
 class ViconRequestHandler(BaseRequestHandler):
 
 	def handle(self):
-		try:
-			while self.request.recv(8) != 'kill' and not self.server._stop_vicon:
+		self.request.settimeout(utils.SOCKET_TIMEOUT)
+		while not self.server._stop_vicon:
+			try:
+				self.request.recv(4)
 				frame = json.dumps(self.server.get_most_recent_frame())
+				print 'frame_ready'
 				self.request.sendall(struct.pack('!I', len(frame)))
+				print 'sent len'
 				self.request.sendall(frame)
-		except socket.error:
-			pass
+				print 'sent frame'
+			except socket.error:
+				print 'something timed out'
 
 class ViconServer(ThreadingMixIn, TCPServer):
 
@@ -37,6 +42,7 @@ class ViconServer(ThreadingMixIn, TCPServer):
 		if not utils.send_ip(utils.SERVER_NAME, utils.get_ip_address()):
 			raise Exception("Couldn't report IP address to API")
 
+		print "Connecting to Vicon..."
 		if not streamreader.connect(utils.VICON_HOST):
 			raise Exception("Couldn't connect to vicon system at : {}:{}".format(utils.VICON_HOST, utils.VICON_PORT))
 
