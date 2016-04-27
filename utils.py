@@ -15,8 +15,13 @@ CAR_PORT = 5001
 API_URL_ADD = 'http://54.173.46.77/add'
 API_URL_GET = 'http://54.173.46.77/get'
 
-# TODO determine distance under which to deem collision
+# TODO determine distance under which to deem collision as well as lookahead
 MIN_DISTANCE = None
+FRAME_LOOKAHEAD = 50
+FRAME_STEP = 1
+
+# Timeout for queue get in threads
+QUEUE_TIMEOUT = 2
 
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 

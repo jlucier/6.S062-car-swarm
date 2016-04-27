@@ -22,7 +22,7 @@ class CarClient(object):
 		while not self._kill:
 			item = None
 			try:
-				item = self._queue.get(timeout=2)
+				item = self._queue.get(timeout=utils.QUEUE_TIMEOUT)
 			except Empty:
 				continue
 
@@ -59,7 +59,7 @@ class CarRequestHandler(BaseRequestHandler):
 
 class CarServer(ThreadingMixIn, TCPServer):
 	"""
-		accepts requests from other cars, communicate messages back to main loop
+	accepts requests from other cars, communicate messages back to main loop
 	"""
 	
 	def __init__(self):
@@ -87,8 +87,8 @@ class CarServer(ThreadingMixIn, TCPServer):
 
 class CarTalker(object):
 	"""
-		manager for the car's interaction (server and client)
-		implement as message queues, outgoing and incoming
+	manager for the car's interaction (server and client)
+	implement as message queues, outgoing and incoming
 	"""
 	
 	def __init__(self, car_ips):
@@ -100,6 +100,9 @@ class CarTalker(object):
 		return True
 
 	def get_message(self):
+		"""
+		Gets incoming message if there is one (None otherwise), blocking only for utils.QUEUE_TIMEOUT
+		"""
 		return self._server.get_message()
 
 	def start(self):
