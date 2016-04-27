@@ -11,8 +11,8 @@
 
 #include "Client.h"
 
-#define FRONT "front"
-#define BACK "back"
+#define CENTER "center"
+#define TWO_PI 2 * 3.14159
 
 using namespace std;
 using namespace ViconDataStreamSDK::CPP;
@@ -45,6 +45,7 @@ bool streamreader_connect(const char* host) {
 
   client_ptr->SetStreamMode(StreamMode::ServerPush);
   client_ptr->EnableMarkerData();
+  client_ptr->EnableSegmentData();
   client_ptr->SetAxisMapping(Direction::Forward, 
                            Direction::Left, 
                            Direction::Up);
@@ -81,12 +82,13 @@ dict streamreader_get_frame() {
       car_markers[marker_name] = boost::make_tuple(location.Translation[0], location.Translation[1]);
     }
 
-    boost::tuples::tuple<float,float> front = car_markers[FRONT];
-    boost::tuples::tuple<float,float> back = car_markers[BACK];
-    float v_x = boost::get<0>(front) - boost::get<0>(back);
-    float v_y = boost::get<1>(front) - boost::get<1>(back);
-    float theta = atan(v_y/v_x);
-    cars[car_name] = make_tuple(boost::get<0>(back), boost::get<1>(back), theta, frame_number);
+    float theta = client_ptr->GetSegmentGlobalRotationHelical(car_name, car_name).Rotation[2];
+    if(theta < 0) {
+      theta += TWO_PI;
+    }
+
+    boost::tuples::tuple<float,float> center = car_markers[CENTER];
+    cars[car_name] = make_tuple(boost::get<0>(center), boost::get<1>(center), theta, frame_number);
   }
 
   return cars;
