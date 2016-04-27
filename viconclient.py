@@ -12,23 +12,24 @@ class ViconClient(object):
 		self._frames = destination # reference to add frames to
 		self._stop_stream = False
 		self._stream_thread = threading.Thread(target=self._receive_frames)
-		self._socket.connect((host, port))
-		self._socket.settimeout(utils.SOCKET_TIMEOUT)
+		try:
+			self._socket.connect((host, port))
+		except socket.error:
+			print "Failed to connect to Vicon server:", (host,port)
 
 	def _receive_frames(self):
 		while not self._stop_stream:
 			try:
-				self._socket.send("blah")
-				print 'sent hello'
+				self._socket.sendall("blah")
 				buf = utils.recvall(self._socket, 4)
 				length, = struct.unpack('!I', buf)
-				print 'got len'
 				frame = json.loads(utils.recvall(self._socket, length))
-				print 'got frame'
 				self._frames.append(frame)
-				print 'added frame'
+
+				print self._frames[-1]
 			except socket.error:
-				print 'trying again'
+				print 'connection to server died'
+				break
 
 	def get_frame(self):
 		if len(self._frames) > 0:
@@ -49,7 +50,7 @@ from collections import deque
 
 def main():
 	d = deque(maxlen=3)
-	c = ViconClient('18.189.14.14', utils.SERVER_PORT, d)
+	c = ViconClient('IP_HERE', utils.SERVER_PORT, d)
 	c.start()
 	try:
 		while True:

@@ -4,30 +4,28 @@ import json
 import math
 import struct
 from collections import deque
+import time
 
-# import streamreader
+import streamreader
 import utils
 
 # BEGIN TESTING
-import streamreader_mock as streamreader
-# import time
+# import streamreader_mock as streamreader
+# import datetime
 # END TESTING
 
 class ViconRequestHandler(BaseRequestHandler):
 
 	def handle(self):
-		self.request.settimeout(utils.SOCKET_TIMEOUT)
 		while not self.server._stop_vicon:
 			try:
 				self.request.recv(4)
 				frame = json.dumps(self.server.get_most_recent_frame())
-				print 'frame_ready'
 				self.request.sendall(struct.pack('!I', len(frame)))
-				print 'sent len'
 				self.request.sendall(frame)
-				print 'sent frame'
 			except socket.error:
-				print 'something timed out'
+				print "Connection died:", self.client_address
+				break
 
 class ViconServer(ThreadingMixIn, TCPServer):
 
@@ -67,9 +65,10 @@ class ViconServer(ThreadingMixIn, TCPServer):
 				new_frame[car] = (values[0], values[1], values[2], v, values[3])
 
 			self._frames.append(new_frame)
+			time.sleep(utils.VICON_SERVER_SLEEP) # allows other threads a chance to access frames
 
 	def get_most_recent_frame(self):
-		if len(self._frames):
+		if len(self._frames) > 0:
 			return self._frames[-1]
 		return dict()
 
@@ -91,14 +90,17 @@ def main():
 	# For testing purposes
 	# test =  ViconServer()
 	# test.start()
-	# while True:
-	# 	start = time.time()
-	# 	frame = test.get_most_recent_frame()
-	# 	end = time.time()
-	# 	print "Delay: ", end - start, "\n", frame
-	# 	inp = raw_input("Server up... kill?")
-	# 	if inp == 'k':
-	# 		break
+	# try:
+	# 	while True:
+	# 		start = datetime.datetime.now()
+	# 		frame = test.get_most_recent_frame()
+	# 		end = datetime.datetime.now()
+	# 		print "Delay: ", end - start, "\n", frame
+	# 		inp = raw_input("Server up... kill?")
+	# 		if inp == 'k':
+	# 			break
+	# except KeyboardInterrupt:
+	# 	pass
 	# test.stop()
 
 	s = ViconServer()
@@ -107,6 +109,7 @@ def main():
 		raw_input('Server Running...' + str(s.server_address) + '\n')
 	except KeyboardInterrupt:
 		pass
+	print "Server going down... Bye"
 	s.stop()
 
 if __name__ == '__main__':
