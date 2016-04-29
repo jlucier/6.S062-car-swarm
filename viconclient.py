@@ -1,40 +1,43 @@
-import socket
-import json
 import threading
-import struct
+import math
+import time
 
 import utils
+import streamreader
 
 class ViconClient(object):
 
-	def __init__(self, host, port, destination):
-		self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	def __init__(self, destination):
 		self._frames = destination # reference to add frames to
 		self._stop_stream = False
 		self._stream_thread = threading.Thread(target=self._receive_frames)
-		try:
-			self._socket.connect((host, port))
-		except socket.error:
-			print "Failed to connect to Vicon server:", (host,port)
+
+		print "Connecting to Vicon..."
+		if not streamreader.connect(utils.VICON_HOST):
+			raise Exception("Couldn't connect to vicon system at : {}:{}".format(utils.VICON_HOST, utils.VICON_PORT))
 
 	def _receive_frames(self):
+		"""
+		Get frames from Vicon, compute velocities, and at the frames to the destination queue
+		"""
+
 		while not self._stop_stream:
-			try:
-				self._socket.sendall("blah")
-				buf = utils.recvall(self._socket, 4)
-				length, = struct.unpack('!I', buf)
-				frame = json.loads(utils.recvall(self._socket, length))
-				self._frames.append(frame)
+			prev_frame = dict()
+			if len(self._frames) > 0:
+				prev_frame = self._frames[-1]
 
-				print self._frames[-1]
-			except socket.error:
-				print 'connection to server died'
-				break
+			curr_frame = streamreader.get_frame()
+			new_frame = dict()
 
-	def get_frame(self):
-		if len(self._frames) > 0:
-			return self._frames[-1]
-		return None
+			for car, values in curr_frame.iteritems():
+				v = 0
+				if car in prev_frame:
+					v = math.sqrt(abs(values[0] - prev_frame[car][0])**2
+						+ abs(values[1] - prev_frame[car][1])**2)
+				new_frame[car] = (values[0], values[1], values[2], v, values[3])
+
+			self._frames.append(new_frame)
+			time.sleep(utils.VICON_SERVER_SLEEP) # allows other threads a chance to access frames
 
 	def start(self):
 		self._stream_thread.start()
@@ -42,7 +45,6 @@ class ViconClient(object):
 	def close(self):
 		self._stop_stream = True
 		self._stream_thread.join()
-		self._socket.close()
 
 # Testing
 
@@ -50,14 +52,14 @@ from collections import deque
 
 def main():
 	d = deque(maxlen=3)
-	c = ViconClient('IP_HERE', utils.SERVER_PORT, d)
+	c = ViconClient(d)
 	c.start()
 	try:
 		while True:
 			inp = raw_input('Kill? ')
 			if inp == 'y':
 				break
-			print len(d)
+			print d[-1]
 	except KeyboardInterrupt:
 		pass
 	c.close()
