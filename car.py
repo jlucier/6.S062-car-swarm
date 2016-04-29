@@ -24,7 +24,7 @@ class Car(object):
         self.name = car_name
         self.frames = deque(maxlen=5) # frame = {'car_name': (x,y,theta,v,t), ...}
         self._kill = False
-        self._last_frame = 0
+        self._last_frame_number = 0
         self._collision_worker = threading.Thread(target=self._detect_collisions)
         self._message_worker = threading.Thread(target=self._process_messages)
         self._main_worker = threading.Thread(target=self._process_collisions)
@@ -65,10 +65,10 @@ class Car(object):
             curr_frame = self.frames[-1]
             my_vals = curr_frame[self.car_name]
 
-            if self._last_frame >= my_vals[-1]:
+            if self._last_frame_number >= my_vals[-1]:
                 continue
 
-            self._last_frame = my_vals[-1]
+            self._last_frame_number = my_vals[-1]
 
             # compute vx,vy per car
             car_velocities = dict()
