@@ -1,3 +1,4 @@
+import socket
 from SocketServer import *
 from Queue import Queue, Empty
 import threading

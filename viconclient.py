@@ -42,7 +42,7 @@ class ViconClient(object):
 	def start(self):
 		self._stream_thread.start()
 	
-	def close(self):
+	def stop(self):
 		self._stop_stream = True
 		self._stream_thread.join()
 

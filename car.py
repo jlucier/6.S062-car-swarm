@@ -1,4 +1,4 @@
-import random as rand
+import threading
 import time
 import math
 from collections import deque
@@ -31,17 +31,14 @@ class Car(object):
         self._collisions = Queue()
 
         car_ips = dict()
-        vicon_ip = None
-        ips = get_car_ips()
+        ips = utils.get_car_ips()
 
         for name, ip in ips.iteritems():
-            if name == utils.SERVER_NAME:
-                vicon_ip = ip
-            elif name != self.car_name:
-                self._car_ips[name] = ip
+            if name != self.name:
+                car_ips[name] = ip
 
-        self._vicon_client = ViconClient(vicon_ip, utils.SERVER_PORT, self.frames)
-        self._talker = CarTalker(car_ips)
+        self._vicon_client = ViconClient(self.frames)
+        # self._talker = CarTalker(car_ips)
         self._driver = None
 
         if path:
@@ -63,7 +60,7 @@ class Car(object):
             if len(self.frames) == 0:
                 continue
             curr_frame = self.frames[-1]
-            my_vals = curr_frame[self.car_name]
+            my_vals = curr_frame[self.name]
 
             if self._last_frame_number >= my_vals[-1]:
                 continue
@@ -73,15 +70,15 @@ class Car(object):
             # compute vx,vy per car
             car_velocities = dict()
             for car_name, vals in curr_frame.iteritems():
-                car_velocities[car_name] = (math.acos(vals[2]) * vals[3], math.asin(vals[2]) * vals[3])
+                car_velocities[car_name] = (math.cos(vals[2]) * vals[3], math.sin(vals[2]) * vals[3])
 
-            my_v = car_velocities[self.car_name]
+            my_v = car_velocities[self.name]
             # +1 makes loop inclusive
             for dt in xrange(utils.FRAME_STEP, utils.FRAME_LOOKAHEAD + 1, utils.FRAME_STEP):
                 my_future_pos = (my_vals[0] + my_v[0] * dt, my_vals[1] + my_v[1] * dt)
 
                 for car_name, vals in curr_frame.iteritems():
-                    if car_name == self.car_name:
+                    if car_name == self.name:
                         continue
 
                     dx = car_velocities[car_name][0] * dt
@@ -90,6 +87,9 @@ class Car(object):
 
                     if collide(my_future_pos, future_pos):
                         # TODO build collision
+                        print "COLLISION DETECTED:", dt
+                        print "my_vals:", my_vals, "      my_v:",my_v
+                        print "me:",my_future_pos, "\nother:",future_pos
                         collision = None
                         self._collisions.put(collision)
 
@@ -143,6 +143,14 @@ class Car(object):
 
 def main():
     car = Car()
+    car._vicon_client.start()
+    time.sleep(2)
+    print "Running..."
+    try:
+        car._detect_collisions()
+    except KeyboardInterrupt:
+        pass
+    # car.stop()
 
 if __name__ == '__main__':
     main()
