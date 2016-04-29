@@ -117,7 +117,6 @@ class Car(object):
         """
 
         while not self._kill:
-            collision = None
             try:
                 collision = self._collisions.get(timeout=utils.QUEUE_TIMEOUT)
             except Empty:
@@ -134,7 +133,7 @@ class Car(object):
         self._main_worker.start()
 
     def stop(self):
-        self._kill = False
+        self._kill = True
         self._vicon_client.stop()
         self._talker.stop()
         self._collision_worker.join()

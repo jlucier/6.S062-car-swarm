@@ -11,7 +11,7 @@ class CarClient(object):
 		self._kill = False
 		self._cars = dict()
 
-		for name, ip in car_ips:
+		for name, ip in car_ips.iteritems():
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect((ip, utils.CAR_PORT))
 			self._cars[name] = s
@@ -20,7 +20,6 @@ class CarClient(object):
 
 	def _send(self):
 		while not self._kill:
-			item = None
 			try:
 				item = self._queue.get(timeout=utils.QUEUE_TIMEOUT)
 			except Empty:
@@ -69,7 +68,7 @@ class CarServer(ThreadingMixIn, TCPServer):
 
 	def get_message(self):
 		try:
-			return self._queue.get(False)
+			return self._queue.get()
 		except Empty:
 			return None
 
@@ -101,7 +100,7 @@ class CarTalker(object):
 
 	def get_message(self):
 		"""
-		Gets incoming message if there is one (None otherwise), blocking only for utils.QUEUE_TIMEOUT
+		Gets incoming message if there is one (None otherwise)
 		"""
 		return self._server.get_message()
 
