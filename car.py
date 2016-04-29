@@ -56,7 +56,7 @@ class Car(object):
             - creates new Collision objects and sends them to the main queue
         """
 
-        distance_between = lambda p1, p2: math.sqrt(abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]))
+        distance_between = lambda p1, p2: math.sqrt(abs(p1[0] - p2[0])**2 + abs(p1[1] - p2[1])**2)
         collide = lambda c1, c2: distance_between(c1, c2) <= utils.MIN_DISTANCE
 
         while not self._kill:
