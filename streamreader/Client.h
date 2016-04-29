@@ -816,6 +816,14 @@ namespace Result
     String           CameraName;
   };
 
+  class Output_GetCameraResolution
+  {
+  public:
+    Result::Enum Result;
+    unsigned int ResolutionX;
+    unsigned int ResolutionY;
+  };
+
   class Output_GetCentroidCount
   {
   public:
@@ -1190,6 +1198,7 @@ namespace Result
 
     Output_GetCameraCount GetCameraCount() const;
     Output_GetCameraName GetCameraName( unsigned int i_CameraIndex ) const;
+    Output_GetCameraResolution GetCameraResolution( const std::string & i_rCameraName ) const;
     Output_GetCentroidCount GetCentroidCount( const std::string & i_rCameraName ) const;
     Output_GetCentroidPosition GetCentroidPosition( const std::string & i_rCameraName, const unsigned int i_CentroidIndex ) const;
 
