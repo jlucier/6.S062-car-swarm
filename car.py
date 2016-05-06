@@ -259,23 +259,23 @@ class Car(object):
 
 def main():
     # testing
-    # car = Car()
-    # car._vicon_client.start()
-    # time.sleep(2)
-    # print "Running..."
-    # try:
-    #     car._detect_collisions()
-    # except KeyboardInterrupt:
-    #     pass
     car = Car()
-    car.start()
+    car._vicon_client.start()
+    time.sleep(2)
     print "Running..."
     try:
-        while(True):
-            pass
+        car._detect_collisions()
     except KeyboardInterrupt:
         pass
-    car.stop()
+    # car = Car()
+    # car.start()
+    # print "Running..."
+    # try:
+    #     while(True):
+    #         pass
+    # except KeyboardInterrupt:
+    #     pass
+    # car.stop()
 
 if __name__ == '__main__':
     main()

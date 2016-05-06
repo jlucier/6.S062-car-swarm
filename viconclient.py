@@ -37,8 +37,8 @@ class ViconClient(object):
 
                 new_frame[car] = (values[0], values[1], values[2], vx, vy, values[3]) # (x,y,theta,vx,vy,t)
 
-			self._frames.append(new_frame)
-			time.sleep(utils.THREAD_SLEEP) # allows other threads a chance to access frames
+            self._frames.append(new_frame)
+            time.sleep(utils.THREAD_SLEEP) # allows other threads a chance to access frames
 
     def start(self):
         self._stream_thread.start()
