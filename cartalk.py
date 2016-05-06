@@ -2,6 +2,9 @@ import socket
 from SocketServer import *
 from Queue import Queue, Empty
 import threading
+import struct
+import time
+import json
 
 import utils
 
@@ -14,7 +17,7 @@ class Message(object):
         self.type = m_type
         self.my_name = my_name # only used for outgoing messages, None otherwise
         self.other_name = other_name
-        frame_num = frame_num
+        self.frame_num = frame_num
         self.location = location
         self.priority_val = priority_val
 
@@ -34,7 +37,9 @@ class CarClient(object):
         self._car_ips = car_ips
 
         for name, ip in car_ips.iteritems():
-            self._car_sockets[name] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(15)
+            self._car_sockets[name] = s
 
         self._thread = threading.Thread(target=self._send)
 
@@ -43,19 +48,29 @@ class CarClient(object):
             try:
                 message = self._queue.get(timeout=utils.QUEUE_TIMEOUT)
             except Empty:
+                time.sleep(utils.THREAD_SLEEP)
                 continue
-
+            print "SENDING MESSAGE"
             s = self._car_sockets[message.other_name]
             text = message.make_message()
             s.sendall(struct.pack('!I', len(text)))
             s.sendall(text)
+            print "SENT"
+
+            time.sleep(utils.THREAD_SLEEP)
 
     def send_message(self, message):
         self._queue.put(message)
+        print "SUCCESSFULLY PUT MESSAGE IN QUEUE"
 
     def start(self):
         for name, s in self._car_sockets.iteritems():
-            s.connect((self.car_ips[name], utils.CAR_PORT))
+            try: 
+                print "connecting to", name
+                s.connect((self._car_ips[name], utils.CAR_PORT))
+                print "successfully connected to", name
+            except socket.error:
+                print "failed to connect to", name
 
         self._thread.start()
 
@@ -77,10 +92,14 @@ class CarRequestHandler(BaseRequestHandler):
                 # create message so that other_name is the car that sent the message
                 message = Message(data['type'], None, data['name'], data['location'], data['frame_num'],
                     priority_val=data['priority_val'])
+                print "GOT MESSAGE FROM", message.other_name
                 self.server._queue.put(message)
+                time.sleep(utils.THREAD_SLEEP)
 
         except socket.error:
-            pass
+            print "socket died"
+        except Exception as e:
+            print "Something bad happend:", e
 
 class CarServer(ThreadingMixIn, TCPServer):
     """
@@ -88,7 +107,7 @@ class CarServer(ThreadingMixIn, TCPServer):
     """
     
     def __init__(self):
-        TCPServer.__init__(self, (socket.gethostname(), utils.CAR_PORT), CarRequestHandler)
+        TCPServer.__init__(self, (utils.get_ip_address(), utils.CAR_PORT), CarRequestHandler)
         self._kill = False
         self._queue = Queue()
 

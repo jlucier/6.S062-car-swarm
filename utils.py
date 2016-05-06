@@ -15,7 +15,7 @@ API_URL_ADD = 'http://54.173.46.77/add'
 API_URL_GET = 'http://54.173.46.77/get'
 
 # TODO determine distance under which to deem collision as well as lookahead
-MIN_DISTANCE = 500
+MIN_DISTANCE = 300
 FRAME_LOOKAHEAD = 100
 FRAME_STEP = 2
 
