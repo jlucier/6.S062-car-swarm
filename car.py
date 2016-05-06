@@ -49,7 +49,7 @@ class Car(object):
                 car_ips[name] = ip
 
         self._vicon_client = ViconClient(self.frames)
-        self._talker = CarTalker(car_ips)
+        # self._talker = CarTalker(car_ips)
         self._driver = None
 
         if path:
@@ -90,22 +90,27 @@ class Car(object):
 
                     if not utils.SAFE_DISTANCE(my_future_pos, future_pos):
                         #debug
-                        print "COLLISION DETECTED:", dt, "  Critical:", dt > utils.COLLISION_CRITICAL
-                        print "my_vals:", my_vals, "      my_v:", (my_vals[3], my_vals[4])
-                        print "me:",my_future_pos, "\nother:",future_pos
+                        # print "COLLISION DETECTED:", dt, "  Critical:", dt < utils.COLLISION_CRITICAL
+                        # print "my_vals:", my_vals, "      my_v:", (my_vals[3], my_vals[4])
+                        # print "me:",my_future_pos, "\nother:",future_pos
 
                         if car_name not in self._collisions:
+                            print "NEW COLLISION"
                             if dt > utils.COLLISION_CRITICAL:
-                                self._collisions[car_name] = Collision(car_name, curr_frame + dt, 
+                                self._collisions[car_name] = Collision(car_name, self._last_frame_number + dt, 
                                     utils.CENTER_POINT(my_future_pos, future_pos))
                             else:
-                                self._collisions[car_name] = Collision(car_name, curr_frame + dt, 
+                                self._collisions[car_name] = Collision(car_name, self._last_frame_number + dt, 
                                     utils.CENTER_POINT(my_future_pos, future_pos), critical=True)
                         else:
+                            print "REPEAT"
                             if dt <= utils.COLLISION_CRITICAL:
+                                print "START CRITICAL"
                                 self._collisions[car_name].lock.acquire()
                                 self._collisions[car_name].critical = True
                                 self._collisions[car_name].lock.release()
+                                print "PAST CRITICAL"
+            time.sleep(utils.THREAD_SLEEP)
 
     def _process_messages(self):
         """
@@ -266,7 +271,9 @@ def main():
     try:
         car._detect_collisions()
     except KeyboardInterrupt:
-        pass
+        car._kill = True
+        time.sleep(.5)
+    print "Done"
     # car = Car()
     # car.start()
     # print "Running..."

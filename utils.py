@@ -1,6 +1,7 @@
 import json, urllib2
 import socket
 import os
+import math
 
 # Defines configuration details and helper functions
 
@@ -14,9 +15,9 @@ API_URL_ADD = 'http://54.173.46.77/add'
 API_URL_GET = 'http://54.173.46.77/get'
 
 # TODO determine distance under which to deem collision as well as lookahead
-MIN_DISTANCE = 100
-FRAME_LOOKAHEAD = 50
-FRAME_STEP = 1
+MIN_DISTANCE = 500
+FRAME_LOOKAHEAD = 100
+FRAME_STEP = 2
 
 # Timeout for queue get in threads
 QUEUE_TIMEOUT = 2

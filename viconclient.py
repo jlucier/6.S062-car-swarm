@@ -63,7 +63,7 @@ def main():
             print d[-1]
     except KeyboardInterrupt:
         pass
-    c.close()
+    c.stop()
 
 if __name__ == '__main__':
     main()
