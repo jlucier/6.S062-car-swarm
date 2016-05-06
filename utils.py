@@ -25,6 +25,15 @@ THREAD_SLEEP = 0.002
 
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 
+# frame threshold for a critical collision
+COLLISION_CRITICAL = 5
+# Useful lambdas for detecting collisions and geometry stuff
+DISTANCE_BETWEEN = lambda p1, p2: math.sqrt(abs(p1[0] - p2[0])**2 + abs(p1[1] - p2[1])**2)
+SAFE_DISTANCE = lambda p1, p2: DISTANCE_BETWEEN(p1, p2) > MIN_DISTANCE
+CENTER_POINT = lambda p1, p2: ((p1[0] + p2[0])/2., (p1[1] + p2[1])/2.)
+
+PRIORITY_CEILING = 10000
+
 def get_car_ips():
     req = urllib2.Request(API_URL_GET)
     ip_list = json.load(urllib2.urlopen(req))

@@ -1,5 +1,4 @@
 import threading
-import math
 import time
 
 import utils
@@ -30,11 +29,13 @@ class ViconClient(object):
             new_frame = dict()
 
             for car, values in curr_frame.iteritems():
-                v = 0
+                vx = 0.
+                vy = 0.
                 if car in prev_frame:
-                    v = math.sqrt(abs(values[0] - prev_frame[car][0])**2
-                        + abs(values[1] - prev_frame[car][1])**2)
-                new_frame[car] = (values[0], values[1], values[2], v, values[3])
+                    vx = values[0] - prev_frame[car][0]
+                    vy = values[1] - prev_frame[car][1]
+
+                new_frame[car] = (values[0], values[1], values[2], vx, vy, values[3]) # (x,y,theta,vx,vy,t)
 
 			self._frames.append(new_frame)
 			time.sleep(utils.THREAD_SLEEP) # allows other threads a chance to access frames

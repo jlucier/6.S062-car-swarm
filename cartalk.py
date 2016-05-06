@@ -5,42 +5,64 @@ import threading
 
 import utils
 
+class Message(object):
+    ROW = 'ROW'
+    STAY = 'STAY'
+    GO = 'GO'
+
+    def __init__(self, m_type, my_name, other_name, location, frame_num, priority_val=0):
+        self.type = m_type
+        self.my_name = my_name # only used for outgoing messages, None otherwise
+        self.other_name = other_name
+        frame_num = frame_num
+        self.location = location
+        self.priority_val = priority_val
+
+    def make_message(self):
+        return json.dumps({'name':self.my_name, 'type':self.type, 'location':self.location,
+            'frame_num':self.frame_num,  'priority_val':self.priority_val})
+
 class CarClient(object):
+	"""
+	Class for sending messages to other cars
+	"""
 
     def __init__(self, car_ips):
         self._queue = Queue()
         self._kill = False
-        self._cars = dict()
+        self._car_sockets = dict()
+        self._car_ips = car_ips
 
         for name, ip in car_ips.iteritems():
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((ip, utils.CAR_PORT))
-            self._cars[name] = s
+            self._car_sockets[name] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self._thread = threading.Thread(target=self._send)
 
     def _send(self):
         while not self._kill:
             try:
-                item = self._queue.get(timeout=utils.QUEUE_TIMEOUT)
+                message = self._queue.get(timeout=utils.QUEUE_TIMEOUT)
             except Empty:
                 continue
 
-            s = self._cars[item[0]]
-            message = json.dumps(item[1])
-            s.sendall(struct.pack('!I', len(message)))
-            s.sendall(message)
+            s = self._car_sockets[message.other_name]
+            text = message.make_message()
+            s.sendall(struct.pack('!I', len(text)))
+            s.sendall(text)
 
-    def send_message(self, item):
-        self._queue.put(item)
+    def send_message(self, message):
+        self._queue.put(message)
 
     def start(self):
+        for name, s in self._car_sockets.iteritems():
+            s.connect((self.car_ips[name], utils.CAR_PORT))
+
         self._thread.start()
 
     def stop(self):
         self._kill = True
         self._thread.join()
-        for s in self._cars.values():
+        for s in self._car_sockets.values():
             s.close()
         return True
 
@@ -51,7 +73,10 @@ class CarRequestHandler(BaseRequestHandler):
             while not self.server._kill:
                 buf = utils.recvall(self.request, 4)
                 length, = struct.unpack('!I', buf)
-                message = json.loads(utils.recvall(self.request, length))
+                data = json.loads(utils.recvall(self.request, length))
+                # create message so that other_name is the car that sent the message
+                message = Message(data['type'], None, data['name'], data['location'], data['frame_num'],
+                    priority_val=data['priority_val'])
                 self.server._queue.put(message)
 
         except socket.error:
@@ -59,7 +84,7 @@ class CarRequestHandler(BaseRequestHandler):
 
 class CarServer(ThreadingMixIn, TCPServer):
     """
-    accepts requests from other cars, communicate messages back to main loop
+    Accepts messages from other cars, communicate messages back to main loop
     """
     
     def __init__(self):
@@ -69,7 +94,7 @@ class CarServer(ThreadingMixIn, TCPServer):
 
     def get_message(self):
         try:
-            return self._queue.get()
+            return self._queue.get() # TODO figure out if we need to block
         except Empty:
             return None
 
@@ -95,8 +120,8 @@ class CarTalker(object):
         self._client = CarClient(car_ips)
         self._server = CarServer()
 
-    def send_message(self, target, message):
-        self._client.send_message((target, message))
+    def send_message(self, message):
+        self._client.send_message(message)
         return True
 
     def get_message(self):
@@ -106,8 +131,9 @@ class CarTalker(object):
         return self._server.get_message()
 
     def start(self):
-        self._client.start()
+        # TODO workout timing so the cars can connect properly
         self._server.start()
+        self._client.start()
 
     def stop(self):
         self._client.stop()

@@ -5,6 +5,10 @@ import struct
 
 import utils
 
+"""
+DEPRECATED
+"""
+
 class ViconClient(object):
 
 	def __init__(self, host, port, destination):

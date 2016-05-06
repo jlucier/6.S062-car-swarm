@@ -1,21 +1,21 @@
 import RPi.GPIO as GPIO
 
 class Direction(object):
-    Forward = 29
-    Back = 31
-    Left = 33
-    Right = 35
-    Pins = [Forward, Back, Left, Right]
+    FORWARD = 29
+    BACK = 31
+    LEFT = 33
+    RIGHT = 35
+    PINS = [FORWARD, BACK, LEFT, RIGHT]
 
 class Preset(object):
-    ClockwiseCircle = (Direction.Forward, Direction.Right)
-    CounterClockwiseCircle = (Direction.Forward, Direction.Left)
+    CLOCKWISE_CIRCLE = (Direction.FORWARD, Direction.RIGHT)
+    COUNTER_CLOCKWISE_CIRCLE = (Direction.FORWARD, Direction.LEFT)
 
 class Driver(object):
 
-    def __init__(self, path=Preset.ClockwiseCircle):
+    def __init__(self, path=Preset.CLOCKWISE_CIRCLE):
         GPIO.setmode(GPIO.BOARD)
-        for pin in Direction.Pins:
+        for pin in Direction.PINS:
             GPIO.setup(pin, GPIO.OUT)
             GPIO.output(pin, False)
 
@@ -26,6 +26,9 @@ class Driver(object):
         self.path = path
 
     def go(self):
+        if self.state == self.path:
+            return
+
         # apply turn first
         if self.path[1] != None:
             GPIO.output(self.path[1], True)
@@ -40,25 +43,29 @@ class Driver(object):
         self.state = (self.state[0], None)
 
     def forward(self):
-        if self.state[0] == Direction.Back:
+        if self.state[0] == Direction.BACK:
             GPIO.output(self.state[0], False)
 
-        GPIO.output(Direction.Forward, True)
-        self.state = (Direction.Forward, self.state[1])
+        GPIO.output(Direction.FORWARD, True)
+        self.state = (Direction.FORWARD, self.state[1])
 
     def reverse(self):
-        if self.state[0] == Direction.Forward:
+        if self.state[0] == Direction.FORWARD:
             GPIO.output(self.state[0], False)
 
-        GPIO.output(Direction.Back, True)
-        self.state = (Direction.Back, self.state[1])
+        GPIO.output(Direction.BACK, True)
+        self.state = (Direction.BACK, self.state[1])
 
     def stop(self):
-        for pin in Direction.Pins:
+        if self.state == (None, None):
+            return
+
+        for pin in Direction.PINS:
             GPIO.output(pin, False)
 
         self.state = (None, None)
 
     def destroy(self):
         GPIO.cleanup()
+        self.state = (None, None)
         self.path = (None, None)
