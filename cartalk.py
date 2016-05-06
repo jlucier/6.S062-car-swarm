@@ -23,9 +23,9 @@ class Message(object):
             'frame_num':self.frame_num,  'priority_val':self.priority_val})
 
 class CarClient(object):
-	"""
-	Class for sending messages to other cars
-	"""
+    """
+    Class for sending messages to other cars
+    """
 
     def __init__(self, car_ips):
         self._queue = Queue()
