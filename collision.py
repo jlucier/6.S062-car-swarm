@@ -6,7 +6,7 @@ import utils
 class CollisionState(object):
     NEW = 0                # brand new, no action taken
     SENT_MESSAGE = 1       # message sent, waiting for reply
-    RECEIVED_MESSAGE = 1   # message received, need to reply
+    RECEIVED_MESSAGE = 2   # message received, need to reply
     WAITING = 3            # other car has right of way
     RESOLVED = 4           # collision resolved (we have ROW or done waiting), good to drive
 
