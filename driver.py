@@ -20,8 +20,12 @@ class Driver(object):
             GPIO.output(pin, False)
 
         self.path = path # (forward/back, turn)
+        self.state = (None, None)
 
-    def drive_path(self):
+    def set_path(self, path):
+        self.path = path
+
+    def go(self):
         # apply turn first
         if self.path[1] != None:
             GPIO.output(self.path[1], True)
@@ -29,36 +33,31 @@ class Driver(object):
         if self.path[0] != None:
             GPIO.output(self.path[0], True)
 
+        self.state = self.path
+
     def straighten(self):
-        GPIO.output(self.path[1], False)
-        self.path = (self.path[0], None)
-
-    def turn_opposite(self, direction):
-        if self.path[1] != None:
-            GPIO.output(self.path[1], False)
-
-        GPIO.output(direction, True)
-        self.path = (self.path[0], direction)
+        GPIO.output(self.state[1], False)
+        self.state = (self.state[0], None)
 
     def forward(self):
-        if self.path[0] == Direction.Back:
-            GPIO.output(self.path[0], False)
+        if self.state[0] == Direction.Back:
+            GPIO.output(self.state[0], False)
 
         GPIO.output(Direction.Forward, True)
-        self.path = (Direction.Forward, self.path[1])
+        self.state = (Direction.Forward, self.state[1])
 
     def reverse(self):
-        if self.path[0] == Direction.Forward:
-            GPIO.output(self.path[0], False)
+        if self.state[0] == Direction.Forward:
+            GPIO.output(self.state[0], False)
 
         GPIO.output(Direction.Back, True)
-        self.path = (Direction.Back, self.path[1])
+        self.state = (Direction.Back, self.state[1])
 
     def stop(self):
         for pin in Direction.Pins:
             GPIO.output(pin, False)
 
-        self.path = (None, None)
+        self.state = (None, None)
 
     def destroy(self):
         GPIO.cleanup()

@@ -14,6 +14,10 @@ import utils
 # import datetime
 # END TESTING
 
+"""
+DEPRECATED
+"""
+
 class ViconRequestHandler(BaseRequestHandler):
 
 	def handle(self):
