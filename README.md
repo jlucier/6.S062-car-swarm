@@ -1,7 +1,7 @@
 # 6.S062-car-swarm
 Our 6.S062 term project
 
-#Streamreader python extenstion setup
+#Streamreader python extension setup
 
 sudo apt-get update
 sudo apt-get upgrade
