@@ -33,7 +33,7 @@ class Car(object):
 
         self.name = car_name
         self.frames = deque(maxlen=5) # frame = {'car_name': (x,y,theta,vx,vy,t), ...}
-        self._state = IDLE
+        self._state = CarState.IDLE
         self._kill = False
         self._last_frame_number = 0
         self._collision_worker = threading.Thread(target=self._detect_collisions)
