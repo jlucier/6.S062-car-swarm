@@ -26,13 +26,13 @@ THREAD_SLEEP = 0.002
 NAME_FILE = os.path.expanduser('~')+'/car_name.txt'
 
 def get_car_ips():
-	req = urllib2.Request(API_URL_GET)
-	ip_list = json.load(urllib2.urlopen(req))
-	ip_dict = dict()
-	for item in ip_list:
-		ip_dict[item['name']] = item['ip']
+    req = urllib2.Request(API_URL_GET)
+    ip_list = json.load(urllib2.urlopen(req))
+    ip_dict = dict()
+    for item in ip_list:
+        ip_dict[item['name']] = item['ip']
 
-	return ip_dict
+    return ip_dict
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,19 +40,19 @@ def get_ip_address():
     return s.getsockname()[0]
 
 def send_ip(name, ip_address):
-	headers = {'IP': str(ip_address), 'NAME': str(name)}
-	req = urllib2.Request(API_URL_ADD, headers=headers)
-	return json.load(urllib2.urlopen(req))['result'] == 'success'
+    headers = {'IP': str(ip_address), 'NAME': str(name)}
+    req = urllib2.Request(API_URL_ADD, headers=headers)
+    return json.load(urllib2.urlopen(req))['result'] == 'success'
 
 def recvall(sock, count):
-	buf = b''
-	while count:
-		try:
-			newbuf = sock.recv(count)
-		except:
-			return None
-		if not newbuf:
-			return None
-		buf += newbuf
-		count -= len(newbuf)
-	return buf
+    buf = b''
+    while count:
+        try:
+            newbuf = sock.recv(count)
+        except:
+            return None
+        if not newbuf:
+            return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
