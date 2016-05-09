@@ -101,7 +101,7 @@ class Car(object):
                         # print "me:",my_future_pos, "\nother:",future_pos
 
                         if car_name not in self._collisions:
-                            # print "NEW COLLISION"
+                            print "NEW COLLISION"
                             if dt > utils.COLLISION_CRITICAL:
                                 self._collisions[car_name] = Collision(car_name, self._last_frame_number + dt, 
                                     utils.CENTER_POINT(my_future_pos, future_pos))
@@ -137,7 +137,7 @@ class Car(object):
                 if message.type != Message.ROW:
                     print "ERROR: Got response for nonexistant collision"
                 else:
-                    # print "NEW MESSAGE RECEIVED"
+                    print "NEW MESSAGE RECEIVED"
                     message.my_name = self.name
                     c = Collision(message.other_name, message.frame_num, message.location, message=message)
                     c.state = CollisionState.RECEIVED_MESSAGE
@@ -149,13 +149,13 @@ class Car(object):
                 if message.type == Message.ROW:
                     if collision.state == CollisionState.WAITING:
                         # we are already waiting, so just send a confirmation that other has ROW
-                        # print "ALREADY WAITING"
+                        print "ALREADY WAITING"
                         self._talker.send_message(Message(Message.GO, self.name, message.other_name,
                             collision.location, collision.frame_num))
 
                     elif collision.state == CollisionState.RESOLVED:
                         # we are already going, so send a stay message
-                        # print "ALREADY RESOLVED"
+                        print "ALREADY RESOLVED"
                         self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
                             collision.location, collision.frame_num))
 
@@ -164,6 +164,7 @@ class Car(object):
                         collision.state = CollisionState.RECEIVED_MESSAGE
                         message.my_name = self.name
                         collision.message = message
+                        print "Got message about unprocessed collision"
 
                     elif collision == CollisionState.SENT_MESSAGE:
                         if collision.message.type == Message.ROW:
@@ -172,21 +173,27 @@ class Car(object):
                                 # we win
                                 self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
                                     collision.location, collision.frame_num))
+                                collision.state = CollisionState.RESOLVED
+
                             elif collision.priority_val < collision.message.priority_val:
                                 # we lose
                                 self._talker.send_message(Message(Message.GO, self.name, message.other_name,
                                     collision.location, collision.frame_num))
+                                collision.state = CollisionState.WAITING
+
                             else:
                                 # tie, restart process by sending ROW
                                 self._talker.send_message(Message(Message.ROW, self.name, message.other_name,
                                     collision.location, collision.frame_num))
+                                collision.state = CollisionState.SENT_MESSAGE
+
                         else:
                             if collision.message.type == Message.GO:
                                 collision.state = CollisionState.RESOLVED
-                                collision.message = None
                             else:
                                 collision.state = CollisionState.WAITING
-                                collision.message = None
+
+                        collision.message = None
                 else:
                     if collision.state == CollisionState.SENT_MESSAGE:
                         if message.type == Message.STAY:
@@ -219,7 +226,7 @@ class Car(object):
                 collision.lock.acquire()
 
                 if collision.critical:
-                    print "CRTICAL"
+                    # print "CRTICAL"
                     # stop driver, send ROW
                     self._driver.stop()
                     self.state = CarState.STOPPED
@@ -238,7 +245,7 @@ class Car(object):
                         collision.state = CollisionState.RESOLVED
 
                 elif collision.state == CollisionState.RESOLVED:
-                    print "RESOLVED: going"
+                    print "RESOLVED: going..."
                     self._driver.go() # repated calls are benign
                     self._state = CarState.DRIVING
                     collisions_to_delete.add(car_name)
@@ -251,12 +258,12 @@ class Car(object):
                         collision.location, collision.frame_num, priority_val=priority))
                     collision.state = CollisionState.SENT_MESSAGE
                     collision.priority_val = priority
-                    # print "NEW ROW SENT"
+                    print "NEW ROW SENT"
 
                 elif collision.state == CollisionState.RECEIVED_MESSAGE:
                     assert collision.message != None
                     # process collision message
-                    # print "REACHED RECEIVED_MESSAGE STATE"
+                    print "REACHED RECEIVED_MESSAGE STATE"
 
                     if collision.message.type == Message.ROW:
                         val = Car._generate_priority()

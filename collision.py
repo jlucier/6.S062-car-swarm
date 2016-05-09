@@ -25,6 +25,9 @@ class Collision(object):
         self.priority_val = 0 # holds the priority value sent with an ROW if we sent one
         self.lock = threading.RLock()
 
+    def __str__(self):
+        return str((self.car_name, self.frame_num, self.location, self.state, self.critical, self.priority_val))
+
     def safe_to_drive(self, other_car):
         """
         Determines if the collision is over and it will be safe to drive

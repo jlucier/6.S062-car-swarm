@@ -2,6 +2,7 @@ import sys
 sys.path.append('../')
 
 from car import Car
+from driver import Preset
 
 def test_collisions():
     car = Car()
@@ -16,12 +17,14 @@ def test_collisions():
     print "Done"
 
 def test_system():
-    car = Car()
+    straight = raw_input("Drive straight? ")
+    path = Preset.STRAIGHT if straight == 'y' else None
+    car = Car(path=path)
     car.start()
     try:
-        raw_input("Running... press enter to start driving")
+        raw_input("Running... press enter to start driving\n")
         car._driver.go()
-        raw_input('')
+        raw_input('Press enter to stop...')
     except KeyboardInterrupt:
         pass
     car.stop()
@@ -36,7 +39,7 @@ def test_bystander():
     car._main_worker.start()
 
     try:
-        raw_input("Running... press enter to stop")
+        raw_input("Running... press enter to stop\n")
     except KeyboardInterrupt:
         pass
 

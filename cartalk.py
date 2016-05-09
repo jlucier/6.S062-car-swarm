@@ -99,7 +99,7 @@ class CarRequestHandler(BaseRequestHandler):
         except socket.error:
             print "socket died"
         except Exception as e:
-            print "Something bad happend:", e
+            print "Something bad happened:", e
 
 class CarServer(ThreadingMixIn, TCPServer):
     """

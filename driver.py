@@ -10,6 +10,7 @@ class Direction(object):
 class Preset(object):
     CLOCKWISE_CIRCLE = (Direction.FORWARD, Direction.RIGHT)
     COUNTER_CLOCKWISE_CIRCLE = (Direction.FORWARD, Direction.LEFT)
+    STRAIGHT = (Direction.FORWARD, None)
 
 class Driver(object):
 
