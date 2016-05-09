@@ -9,12 +9,12 @@ import utils
 from cartalk import CarTalker, Message
 from collision import Collision, CollisionState
 
-# from driver import Driver, Preset
-# from viconclient import ViconClient
+from driver import Driver, Preset
+from viconclient import ViconClient
 
 # begin debug
-from tests.viconclient_mock import ViconClient
-from tests.driver_mock import Driver
+# from tests.viconclient_mock import ViconClient
+# from tests.driver_mock import Driver
 # end debug
 
 class CarState(object):
@@ -101,7 +101,7 @@ class Car(object):
                         # print "me:",my_future_pos, "\nother:",future_pos
 
                         if car_name not in self._collisions:
-                            print "NEW COLLISION"
+                            # print "NEW COLLISION"
                             if dt > utils.COLLISION_CRITICAL:
                                 self._collisions[car_name] = Collision(car_name, self._last_frame_number + dt, 
                                     utils.CENTER_POINT(my_future_pos, future_pos))
@@ -131,13 +131,13 @@ class Car(object):
                 time.sleep(utils.THREAD_SLEEP)
                 continue
 
-            print "RECEIVED MESSAGE IN PROCESSOR"
+            # print "RECEIVED MESSAGE IN PROCESSOR"
 
             if message.other_name not in self._collisions:
                 if message.type != Message.ROW:
                     print "ERROR: Got response for nonexistant collision"
                 else:
-                    print "NEW MESSAGE RECEIVED"
+                    # print "NEW MESSAGE RECEIVED"
                     message.my_name = self.name
                     c = Collision(message.other_name, message.frame_num, message.location, message=message)
                     c.state = CollisionState.RECEIVED_MESSAGE
@@ -149,13 +149,13 @@ class Car(object):
                 if message.type == Message.ROW:
                     if collision.state == CollisionState.WAITING:
                         # we are already waiting, so just send a confirmation that other has ROW
-                        print "ALREADY WAITING"
+                        # print "ALREADY WAITING"
                         self._talker.send_message(Message(Message.GO, self.name, message.other_name,
                             collision.location, collision.frame_num))
 
                     elif collision.state == CollisionState.RESOLVED:
                         # we are already going, so send a stay message
-                        print "ALREADY RESOLVED"
+                        # print "ALREADY RESOLVED"
                         self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
                             collision.location, collision.frame_num))
 
@@ -223,69 +223,62 @@ class Car(object):
                     # stop driver, send ROW
                     self._driver.stop()
                     self.state = CarState.STOPPED
+                    collision.critical = False
 
+                if collision.state == CollisionState.SENT_MESSAGE:
+                    pass # wait for reply
+
+                elif collision.state == CollisionState.WAITING:
+                    # print "WAITING"
+                    self._driver.stop() # repeated calls are benign
+                    self.state = CarState.STOPPED
+
+                    if collision.safe_to_drive(self.frames[-1][car_name]):
+                        print "SAFE TO PROCEED"
+                        collision.state = CollisionState.RESOLVED
+
+                elif collision.state == CollisionState.RESOLVED:
+                    print "RESOLVED: going"
+                    self._driver.go() # repated calls are benign
+                    self._state = CarState.DRIVING
+                    collisions_to_delete.add(car_name)
+
+                elif collision.state == CollisionState.NEW:
+                    # print "NEW COLLISION: sending ROW"
+                    # send ROW
                     priority = Car._generate_priority()
                     self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
                         collision.location, collision.frame_num, priority_val=priority))
                     collision.state = CollisionState.SENT_MESSAGE
                     collision.priority_val = priority
-                    print "SENT CRITICAL ROW"
+                    # print "NEW ROW SENT"
 
-                else:
-                    if collision.state == CollisionState.SENT_MESSAGE:
-                        pass # wait for reply
+                elif collision.state == CollisionState.RECEIVED_MESSAGE:
+                    assert collision.message != None
+                    # process collision message
+                    # print "REACHED RECEIVED_MESSAGE STATE"
 
-                    elif collision.state == CollisionState.WAITING:
-                        print "WAITING"
-                        self._driver.stop() # repeated calls are benign
-                        self.state = CarState.STOPPED
-
-                        if collision.safe_to_drive(self.frames[-1][car_name]):
-                            print "SAFE TO PROCEED"
-                            collision.state = CollisionState.RESOLVED
-
-                    elif collision.state == CollisionState.RESOLVED:
-                        print "RESOLVED: going"
-                        self._driver.go() # repated calls are benign
-                        self._state = CarState.DRIVING
-                        collisions_to_delete.add(car_name)
-
-                    elif collision.state == CollisionState.NEW:
-                        print "NEW COLLISION: sending ROW"
-                        # send ROW
-                        priority = Car._generate_priority()
-                        self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
-                            collision.location, collision.frame_num, priority_val=priority))
-                        collision.state = CollisionState.SENT_MESSAGE
-                        collision.priority_val = priority
-                        print "NEW ROW SENT"
-
-                    elif collision.state == CollisionState.RECEIVED_MESSAGE:
-                        assert collision.message != None
-                        # process collision message
-                        print "REACHED RECEIVED_MESSAGE STATE"
-
-                        if collision.message.type == Message.ROW:
-                            val = Car._generate_priority()
-                            print "DOPENESS... will wait:", collision.message.priority_val > val
-                            if collision.message.priority_val > val:
-                                # send GO, wait
-                                self._talker.send_message(Message(Message.GO, self.name, collision.message.other_name,
-                                                            collision.location, collision.frame_num))
-                                collision.state = CollisionState.WAITING
-
-                            else:
-                                # send WAIT
-                                self._talker.send_message(Message(Message.STAY, self.name, collision.message.other_name,
-                                                                    collision.location, collision.frame_num))
-                                collision.state = CollisionState.RESOLVED
-
-                        elif collision.message == Message.GO:
-                            collision.state = CollisionState.RESOLVED
-                        else:
+                    if collision.message.type == Message.ROW:
+                        val = Car._generate_priority()
+                        # print "DOPENESS... will wait:", collision.message.priority_val > val
+                        if collision.message.priority_val > val:
+                            # send GO, wait
+                            self._talker.send_message(Message(Message.GO, self.name, collision.message.other_name,
+                                                        collision.location, collision.frame_num))
                             collision.state = CollisionState.WAITING
 
-                        collision.message = None
+                        else:
+                            # send WAIT
+                            self._talker.send_message(Message(Message.STAY, self.name, collision.message.other_name,
+                                                                collision.location, collision.frame_num))
+                            collision.state = CollisionState.RESOLVED
+
+                    elif collision.message == Message.GO:
+                        collision.state = CollisionState.RESOLVED
+                    else:
+                        collision.state = CollisionState.WAITING
+
+                    collision.message = None
 
                 collision.lock.release()
 
@@ -308,6 +301,8 @@ class Car(object):
 
     def stop(self):
         self._kill = True
+        self._driver.stop()
+        self._driver.destroy()
         self._vicon_client.stop()
         self._talker.stop()
         self._collision_worker.join()
