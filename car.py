@@ -168,30 +168,36 @@ class Car(object):
 
                     elif collision == CollisionState.SENT_MESSAGE:
                         if collision.message.type == Message.ROW:
+                            print "DUPLICATED ROW"
                             # compare the ROW we sent and the one we received
                             if collision.priority_val > collision.message.priority_val:
                                 # we win
                                 self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
                                     collision.location, collision.frame_num))
                                 collision.state = CollisionState.RESOLVED
+                                print "RESOLVE DUPLICATED ROW"
 
                             elif collision.priority_val < collision.message.priority_val:
                                 # we lose
                                 self._talker.send_message(Message(Message.GO, self.name, message.other_name,
                                     collision.location, collision.frame_num))
                                 collision.state = CollisionState.WAITING
+                                print "WAITING DUPLICATED ROW"
 
                             else:
                                 # tie, restart process by sending ROW
                                 self._talker.send_message(Message(Message.ROW, self.name, message.other_name,
                                     collision.location, collision.frame_num))
                                 collision.state = CollisionState.SENT_MESSAGE
+                                print "TIE DUPLICATED ROW"
 
                         else:
                             if collision.message.type == Message.GO:
                                 collision.state = CollisionState.RESOLVED
+                                print "WE GET ROW"
                             else:
                                 collision.state = CollisionState.WAITING
+                                print "WE WAIT"
 
                         collision.message = None
                 else:
@@ -273,12 +279,14 @@ class Car(object):
                             self._talker.send_message(Message(Message.GO, self.name, collision.message.other_name,
                                                         collision.location, collision.frame_num))
                             collision.state = CollisionState.WAITING
+                            print "WAIT"
 
                         else:
                             # send WAIT
                             self._talker.send_message(Message(Message.STAY, self.name, collision.message.other_name,
                                                                 collision.location, collision.frame_num))
                             collision.state = CollisionState.RESOLVED
+                            print "RESOLVED"
 
                     elif collision.message == Message.GO:
                         collision.state = CollisionState.RESOLVED
