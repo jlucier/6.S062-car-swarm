@@ -65,12 +65,17 @@ class CarClient(object):
 
     def start(self):
         for name, s in self._car_sockets.iteritems():
-            try: 
-                print "connecting to", name
-                s.connect((self._car_ips[name], utils.CAR_PORT))
-                print "successfully connected to", name
-            except socket.error:
-                print "failed to connect to", name
+            count = 0
+            while count < 3:
+                try:
+                    print "connecting to", name
+                    s.connect((self._car_ips[name], utils.CAR_PORT))
+                    print "successfully connected to", name
+                    break
+                except socket.error:
+                    print "failed to connect to", name,"... trying again"
+                    count += 1
+                    time.sleep(3)
 
         self._thread.start()
 
