@@ -115,7 +115,8 @@ class Car(object):
                                 self._collisions[car_name].lock.acquire()
                                 self._collisions[car_name].critical = True
                                 self._collisions[car_name].lock.release()
-                                # print "PAST CRITICAL"
+                                print "DETECTED CRITICAL COLLISION"
+
             time.sleep(utils.THREAD_SLEEP)
 
     def _process_messages(self):
@@ -167,37 +168,39 @@ class Car(object):
                         print "Got message about unprocessed collision"
 
                     elif collision == CollisionState.SENT_MESSAGE:
-                        if collision.message.type == Message.ROW:
-                            print "DUPLICATED ROW"
-                            # compare the ROW we sent and the one we received
-                            if collision.priority_val > collision.message.priority_val:
-                                # we win
-                                self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
-                                    collision.location, collision.frame_num))
-                                collision.state = CollisionState.RESOLVED
-                                print "RESOLVE DUPLICATED ROW"
+                        # if collision.message.type == Message.ROW:
 
-                            elif collision.priority_val < collision.message.priority_val:
-                                # we lose
-                                self._talker.send_message(Message(Message.GO, self.name, message.other_name,
-                                    collision.location, collision.frame_num))
-                                collision.state = CollisionState.WAITING
-                                print "WAITING DUPLICATED ROW"
+                        print "ALREADY SENT ROW... RESOLVING CONFLICT"
+                        # compare the ROW we sent and the one we received
+                        if collision.priority_val > collision.message.priority_val:
+                            # we win
+                            self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
+                                collision.location, collision.frame_num))
+                            collision.state = CollisionState.RESOLVED
+                            print "RESOLVED DUPLICATED ROW... WE GO"
 
-                            else:
-                                # tie, restart process by sending ROW
-                                self._talker.send_message(Message(Message.ROW, self.name, message.other_name,
-                                    collision.location, collision.frame_num))
-                                collision.state = CollisionState.SENT_MESSAGE
-                                print "TIE DUPLICATED ROW"
+                        elif collision.priority_val < collision.message.priority_val:
+                            # we lose
+                            self._talker.send_message(Message(Message.GO, self.name, message.other_name,
+                                collision.location, collision.frame_num))
+                            collision.state = CollisionState.WAITING
+                            print "RESOLVED DUPLICATED ROW... WE WAIT"
 
                         else:
-                            if collision.message.type == Message.GO:
-                                collision.state = CollisionState.RESOLVED
-                                print "WE GET ROW"
-                            else:
-                                collision.state = CollisionState.WAITING
-                                print "WE WAIT"
+                            # tie, restart process by sending ROW
+                            self._talker.send_message(Message(Message.ROW, self.name, message.other_name,
+                                collision.location, collision.frame_num))
+                            collision.state = CollisionState.SENT_MESSAGE
+                            print "TIED DUPLICATED ROW... RESEND"
+
+                        # else:
+                        #     print "REPLY RECEIVED"
+                        #     if collision.message.type == Message.GO:
+                        #         collision.state = CollisionState.RESOLVED
+                        #         print "WE GO"
+                        #     else:
+                        #         collision.state = CollisionState.WAITING
+                        #         print "WE WAIT"
 
                         collision.message = None
                 else:
@@ -205,9 +208,11 @@ class Car(object):
                         if message.type == Message.STAY:
                             collision.state = CollisionState.WAITING
                             collision.message = None
+                            print "WE STAY"
                         else:
                             collision.state = CollisionState.RESOLVED
                             collision.message = None
+                            print "RESOLVED... WE GO"
                     else:
                         print "ERROR: got response without having sent a message"
 
@@ -232,8 +237,8 @@ class Car(object):
                 collision.lock.acquire()
 
                 if collision.critical:
-                    # print "CRTICAL"
                     # stop driver, send ROW
+                    # print "CRTICAL"
                     self._driver.stop()
                     self.state = CarState.STOPPED
                     collision.critical = False
@@ -257,19 +262,19 @@ class Car(object):
                     collisions_to_delete.add(car_name)
 
                 elif collision.state == CollisionState.NEW:
-                    # print "NEW COLLISION: sending ROW"
                     # send ROW
+                    # print "NEW COLLISION: sending ROW"
                     priority = Car._generate_priority()
                     self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
                         collision.location, collision.frame_num, priority_val=priority))
                     collision.state = CollisionState.SENT_MESSAGE
                     collision.priority_val = priority
-                    print "NEW ROW SENT"
+                    print "ROW SENT"
 
                 elif collision.state == CollisionState.RECEIVED_MESSAGE:
                     assert collision.message != None
                     # process collision message
-                    print "REACHED RECEIVED_MESSAGE STATE"
+                    print "RECEIVED MESSAGE NORMAL"
 
                     if collision.message.type == Message.ROW:
                         val = Car._generate_priority()
@@ -286,7 +291,7 @@ class Car(object):
                             self._talker.send_message(Message(Message.STAY, self.name, collision.message.other_name,
                                                                 collision.location, collision.frame_num))
                             collision.state = CollisionState.RESOLVED
-                            print "RESOLVED"
+                            print "RESOLVED... GO"
 
                     elif collision.message == Message.GO:
                         collision.state = CollisionState.RESOLVED
