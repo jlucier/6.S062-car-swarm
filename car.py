@@ -6,10 +6,16 @@ from collections import deque
 from Queue import Queue, Empty
 
 import utils
-from viconclient import ViconClient
 from cartalk import CarTalker, Message
-from driver import Driver, Preset
 from collision import Collision, CollisionState
+
+# from driver import Driver, Preset
+# from viconclient import ViconClient
+
+# begin debug
+from tests.viconclient_mock import ViconClient
+from tests.driver_mock import Driver
+# end debug
 
 class CarState(object):
     """
@@ -124,11 +130,12 @@ class Car(object):
             if message is None:
                 time.sleep(utils.THREAD_SLEEP)
                 continue
+
             print "RECEIVED MESSAGE IN PROCESSOR"
+
             if message.other_name not in self._collisions:
                 if message.type != Message.ROW:
-                    print "WE'RE FUCKED"
-                    # TODO handle this
+                    print "ERROR: Got response for nonexistant collision"
                 else:
                     print "NEW MESSAGE RECEIVED"
                     message.my_name = self.name
@@ -159,16 +166,27 @@ class Car(object):
                         collision.message = message
 
                     elif collision == CollisionState.SENT_MESSAGE:
-                        # TODO if we sent a message, need to resolve consensus issue (use frame num)
                         if collision.message.type == Message.ROW:
-                            print "Fucked big time"
-                            if message.frame_num > collision.frame_num:
-                                pass
+                            # compare the ROW we sent and the one we received
+                            if collision.priority_val > collision.message.priority_val:
+                                # we win
+                                self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
+                                    collision.location, collision.frame_num))
+                            elif collision.priority_val < collision.message.priority_val:
+                                # we lose
+                                self._talker.send_message(Message(Message.GO, self.name, message.other_name,
+                                    collision.location, collision.frame_num))
+                            else:
+                                # tie, restart process by sending ROW
+                                self._talker.send_message(Message(Message.ROW, self.name, message.other_name,
+                                    collision.location, collision.frame_num))
                         else:
                             if collision.message.type == Message.GO:
-                                print "GOT THE GO AHEAD"
+                                collision.state = CollisionState.RESOLVED
+                                collision.message = None
                             else:
-                                print "STAY PUT BITCH"
+                                collision.state = CollisionState.WAITING
+                                collision.message = None
                 else:
                     if collision.state == CollisionState.SENT_MESSAGE:
                         if message.type == Message.STAY:
@@ -178,8 +196,7 @@ class Car(object):
                             collision.state = CollisionState.RESOLVED
                             collision.message = None
                     else:
-                        print "WE'RE FUCKED #2"
-                        # TODO
+                        print "ERROR: got response without having sent a message"
 
                 collision.lock.release()
 
@@ -206,14 +223,17 @@ class Car(object):
                     # stop driver, send ROW
                     self._driver.stop()
                     self.state = CarState.STOPPED
+
+                    priority = Car._generate_priority()
                     self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
-                        collision.location, collision.frame_num, priority_val=Car._generate_priority()))
+                        collision.location, collision.frame_num, priority_val=priority))
                     collision.state = CollisionState.SENT_MESSAGE
+                    collision.priority_val = priority
                     print "SENT CRITICAL ROW"
 
                 else:
                     if collision.state == CollisionState.SENT_MESSAGE:
-                        pass # just wait for reply
+                        pass # wait for reply
 
                     elif collision.state == CollisionState.WAITING:
                         print "WAITING"
@@ -233,9 +253,11 @@ class Car(object):
                     elif collision.state == CollisionState.NEW:
                         print "NEW COLLISION: sending ROW"
                         # send ROW
+                        priority = Car._generate_priority()
                         self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
-                            collision.location, collision.frame_num, priority_val=Car._generate_priority()))
+                            collision.location, collision.frame_num, priority_val=priority))
                         collision.state = CollisionState.SENT_MESSAGE
+                        collision.priority_val = priority
                         print "NEW ROW SENT"
 
                     elif collision.state == CollisionState.RECEIVED_MESSAGE:
@@ -262,6 +284,8 @@ class Car(object):
                             collision.state = CollisionState.RESOLVED
                         else:
                             collision.state = CollisionState.WAITING
+
+                        collision.message = None
 
                 collision.lock.release()
 
@@ -292,26 +316,15 @@ class Car(object):
         return True
 
 def main():
-    # testing
     car = Car()
-    car._vicon_client.start()
-    time.sleep(2)
+    car.start()
     print "Running..."
     try:
-        car._detect_collisions()
+        while(True):
+            pass
     except KeyboardInterrupt:
-        car._kill = True
-        time.sleep(.5)
-    print "Done"
-    # car = Car()
-    # car.start()
-    # print "Running..."
-    # try:
-    #     while(True):
-    #         pass
-    # except KeyboardInterrupt:
-    #     pass
-    # car.stop()
+        pass
+    car.stop()
 
 if __name__ == '__main__':
     main()

@@ -20,8 +20,9 @@ class Collision(object):
         self.frame_num = frame_num
         self.location = location
         self.state = state
-        self.message = message
+        self.message = message # holds a received message
         self.critical = critical
+        self.priority_val = 0 # holds the priority value sent with an ROW if we sent one
         self.lock = threading.RLock()
 
     def safe_to_drive(self, other_car):
@@ -34,7 +35,7 @@ class Collision(object):
         @return bool: true if safe, false otherwise
         """
 
-        if not utils.SAFE_DISTANCE(self.location, (other_car[0], other_car[1])):
+        if not utils.SAFE_TO_PASS(self.location, (other_car[0], other_car[1])):
             return False
 
         car_pos = np.array([other_car[0], other_car[1]])
