@@ -68,7 +68,6 @@ class CarClient(object):
             count = 0
             while count < 3:
                 try:
-                    print "connecting to", name
                     s.connect((self._car_ips[name], utils.CAR_PORT))
                     print "successfully connected to", name
                     break

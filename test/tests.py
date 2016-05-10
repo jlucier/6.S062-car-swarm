@@ -19,6 +19,8 @@ def test_collisions():
 def test_system():
     straight = raw_input("Drive straight? ")
     path = Preset.STRAIGHT if straight == 'y' else None
+    if not path:
+        path = Preset.COUNTER_CLOCKWISE_CIRCLE if raw_input("Counter clockwise? ") == 'y' else path
     car = Car(path=path)
     car.start()
     try:

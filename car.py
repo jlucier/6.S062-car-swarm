@@ -115,7 +115,7 @@ class Car(object):
                                 self._collisions[car_name].lock.acquire()
                                 self._collisions[car_name].critical = True
                                 self._collisions[car_name].lock.release()
-                                print "DETECTED CRITICAL COLLISION"
+                                print "DETECTED CRITICAL COLLISION", car_name
 
             time.sleep(utils.THREAD_SLEEP)
 
@@ -167,19 +167,19 @@ class Car(object):
                         collision.message = message
                         print "Got message about unprocessed collision"
 
-                    elif collision == CollisionState.SENT_MESSAGE:
+                    elif collision.state == CollisionState.SENT_MESSAGE:
                         # if collision.message.type == Message.ROW:
 
                         print "ALREADY SENT ROW... RESOLVING CONFLICT"
                         # compare the ROW we sent and the one we received
-                        if collision.priority_val > collision.message.priority_val:
+                        if collision.priority_val > message.priority_val:
                             # we win
                             self._talker.send_message(Message(Message.STAY, self.name, message.other_name,
                                 collision.location, collision.frame_num))
                             collision.state = CollisionState.RESOLVED
                             print "RESOLVED DUPLICATED ROW... WE GO"
 
-                        elif collision.priority_val < collision.message.priority_val:
+                        elif collision.priority_val < message.priority_val:
                             # we lose
                             self._talker.send_message(Message(Message.GO, self.name, message.other_name,
                                 collision.location, collision.frame_num))
