@@ -95,10 +95,6 @@ class Car(object):
                     future_pos = (vals[0] + dx, vals[1] + dy)
 
                     if not utils.SAFE_DISTANCE(my_future_pos, future_pos):
-                        #debug
-                        # print "COLLISION DETECTED:", dt, "  Critical:", dt < utils.COLLISION_CRITICAL
-                        # print "my_vals:", my_vals, "      my_v:", (my_vals[3], my_vals[4])
-                        # print "me:",my_future_pos, "\nother:",future_pos
 
                         if car_name not in self._collisions:
                             print "NEW COLLISION"
@@ -131,8 +127,6 @@ class Car(object):
             if message is None:
                 time.sleep(utils.THREAD_SLEEP)
                 continue
-
-            # print "RECEIVED MESSAGE IN PROCESSOR"
 
             if message.other_name not in self._collisions:
                 if message.type != Message.ROW:
@@ -193,15 +187,6 @@ class Car(object):
                             collision.state = CollisionState.SENT_MESSAGE
                             print "TIED DUPLICATED ROW... RESEND"
 
-                        # else:
-                        #     print "REPLY RECEIVED"
-                        #     if collision.message.type == Message.GO:
-                        #         collision.state = CollisionState.RESOLVED
-                        #         print "WE GO"
-                        #     else:
-                        #         collision.state = CollisionState.WAITING
-                        #         print "WE WAIT"
-
                         collision.message = None
                 else:
                     if collision.state == CollisionState.SENT_MESSAGE:
@@ -238,7 +223,6 @@ class Car(object):
 
                 if collision.critical:
                     # stop driver, send ROW
-                    # print "CRTICAL"
                     self._driver.stop()
                     self.state = CarState.STOPPED
                     collision.critical = False
@@ -247,7 +231,6 @@ class Car(object):
                     pass # wait for reply
 
                 elif collision.state == CollisionState.WAITING:
-                    # print "WAITING"
                     self._driver.stop() # repeated calls are benign
                     self.state = CarState.STOPPED
 
@@ -263,7 +246,6 @@ class Car(object):
 
                 elif collision.state == CollisionState.NEW:
                     # send ROW
-                    # print "NEW COLLISION: sending ROW"
                     priority = Car._generate_priority()
                     self._talker.send_message(Message(Message.ROW, self.name, collision.car_name,
                         collision.location, collision.frame_num, priority_val=priority))
@@ -278,7 +260,6 @@ class Car(object):
 
                     if collision.message.type == Message.ROW:
                         val = Car._generate_priority()
-                        # print "DOPENESS... will wait:", collision.message.priority_val > val
                         if collision.message.priority_val > val:
                             # send GO, wait
                             self._talker.send_message(Message(Message.GO, self.name, collision.message.other_name,

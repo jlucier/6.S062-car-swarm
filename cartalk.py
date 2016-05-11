@@ -50,18 +50,15 @@ class CarClient(object):
             except Empty:
                 time.sleep(utils.THREAD_SLEEP)
                 continue
-            # print "SENDING MESSAGE"
             s = self._car_sockets[message.other_name]
             text = message.make_message()
             s.sendall(struct.pack('!I', len(text)))
             s.sendall(text)
-            # print "SENT"
 
             time.sleep(utils.THREAD_SLEEP)
 
     def send_message(self, message):
         self._queue.put(message)
-        # print "SUCCESSFULLY PUT MESSAGE IN QUEUE"
 
     def start(self):
         for name, s in self._car_sockets.iteritems():
@@ -96,7 +93,6 @@ class CarRequestHandler(BaseRequestHandler):
                 # create message so that other_name is the car that sent the message
                 message = Message(data['type'], None, data['name'], data['location'], data['frame_num'],
                     priority_val=data['priority_val'])
-                # print "GOT MESSAGE FROM", message.other_name
                 self.server._queue.put(message)
                 time.sleep(utils.THREAD_SLEEP)
 
@@ -117,7 +113,7 @@ class CarServer(ThreadingMixIn, TCPServer):
 
     def get_message(self):
         try:
-            return self._queue.get() # TODO figure out if we need to block
+            return self._queue.get()
         except Empty:
             return None
 
@@ -154,7 +150,6 @@ class CarTalker(object):
         return self._server.get_message()
 
     def start(self):
-        # TODO workout timing so the cars can connect properly
         self._server.start()
         self._client.start()
 
