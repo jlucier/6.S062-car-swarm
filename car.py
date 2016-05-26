@@ -3,13 +3,12 @@ import time
 import math
 import random
 from collections import deque
-from Queue import Queue, Empty
 
 import utils
 from cartalk import CarTalker, Message
 from collision import Collision, CollisionState
 
-from driver import Driver, Preset
+from driver import Driver
 from viconclient import ViconClient
 
 # begin debug
